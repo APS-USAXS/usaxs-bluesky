@@ -23,14 +23,14 @@ class LaserAR500(Device):
     uses Galil userAve (2 seconds long) to average noise
     uses userCalc7 in LAX to convert to real distace
     to read distace use laser.distance.get()
-    to switch on use laser.enable(1)
-    to switch off use laser.enable(0)
+    to switch on use laser.enable.put(1)
+    to switch off use laser.enable.put(0)
     dx_in and dy_in reads defined positions from epics. PVs and on Parameters GUI. 
     """
     distance    = Component(EpicsSignalRO, "9idcLAX:userCalc7.VAL")
     enable      = Component(EpicsSignal, "9idcRIO:Galil2Bo1_CMD")
-    dx_in       = Component(EpicsSignalRO, "9idcLAX:USAXS:Laser_dx")    
-    dy_in       = Component(EpicsSignalRO, "9idcLAX:USAXS:Laser_dy")
+    dx          = Component(EpicsSignalRO, "9idcLAX:USAXS:Laser_dx")    
+    dy          = Component(EpicsSignalRO, "9idcLAX:USAXS:Laser_dy")
 
 
 laser = LaserAR500("", name="laser")
