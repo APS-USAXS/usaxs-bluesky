@@ -7,6 +7,7 @@ __all__ = [
 ]
 
 from ..session_logs import logger
+import pyRestTable
 
 logger.info(__file__)
 
@@ -60,6 +61,19 @@ class UserOverride:
         except:
             pass
         return default
+    
+    def summary(self):
+        """
+        Print a table summarizing the overrides.
+        """
+        tbl = pyRestTable.Table()
+        tbl.labels = "parameter value".split()
+        methods = "pick reset summary undefined".split()
+        for parm in dir(self):
+            if parm.startswith("_") or parm in methods:
+                continue
+            tbl.addRow((parm, self.pick(parm, "--undefined--")))
+        print(tbl)
 
 
 user_override = UserOverride()
