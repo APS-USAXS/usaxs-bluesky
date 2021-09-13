@@ -31,6 +31,7 @@ from ophyd import Kind
 import time
 
 from ..devices import autoscale_amplifiers, upd_controls, I0_controls, I00_controls
+from ..devices import user_override
 from ..devices.axis_tuning import axis_tune_range
 from ..devices.axis_tuning import TUNE_METHOD_PEAK_CHOICE
 from ..devices.axis_tuning import TUNING_DET_SIGNAL
@@ -241,7 +242,8 @@ def instrument_default_tune_ranges():
         a_stage.r2p.tuner.width = 7
         ms_stage.rp.tuner.width = 5
         as_stage.rp.tuner.width = 3
-        yield from bps.mv(terms.USAXS.usaxs_minstep, 0.000045)
+        minstep = user_override.pick("usaxs_minstep", 0.000045)
+        yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 10.99 <= monochromator.dcm.energy.get() < 12.99:   # Si 220 crystals
         m_stage.r.tuner.width = 0.003
@@ -250,7 +252,8 @@ def instrument_default_tune_ranges():
         a_stage.r2p.tuner.width = 5
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
-        yield from bps.mv(terms.USAXS.usaxs_minstep, 0.000035)
+        minstep = user_override.pick("usaxs_minstep", 0.000035)
+        yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 12.99 <= monochromator.dcm.energy.get() < 18.1:   # Si 220 crystals
         m_stage.r.tuner.width = 0.0030
@@ -259,7 +262,8 @@ def instrument_default_tune_ranges():
         a_stage.r2p.tuner.width = 5
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
-        yield from bps.mv(terms.USAXS.usaxs_minstep, 0.000025)
+        minstep = user_override.pick("usaxs_minstep", 0.000025)
+        yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 18.1 <= monochromator.dcm.energy.get() < 20.8:   # Si 220 crystals
         m_stage.r.tuner.width = 0.0026
@@ -268,7 +272,8 @@ def instrument_default_tune_ranges():
         a_stage.r2p.tuner.width = 6
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
-        yield from bps.mv(terms.USAXS.usaxs_minstep, 0.000025)
+        minstep = user_override.pick("usaxs_minstep", 0.000025)
+        yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 20.8 <= monochromator.dcm.energy.get():   # Si 220 crystals
         m_stage.r.tuner.width = 0.0025
@@ -277,7 +282,8 @@ def instrument_default_tune_ranges():
         a_stage.r2p.tuner.width = 5
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
-        yield from bps.mv(terms.USAXS.usaxs_minstep, 0.000025)
+        minstep = user_override.pick("usaxs_minstep", 0.000025)
+        yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
 
 def update_EPICS_tuning_widths():
