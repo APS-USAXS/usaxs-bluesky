@@ -17,8 +17,9 @@ class UserOverride:
     Define parameters that can be overriden from a user configuration file.
 
     To add additional parameter names that a user might override, define
-    the new name in the reset() method as for ``usaxs_minstep``.  Refer to
-    ``plans.axis_tuning`` for example back-end handling.  Such as::
+    the new name in the ``reset()`` method below as shown for
+    ``usaxs_minstep``.  Refer to ``plans.axis_tuning`` for example back-end
+    handling.  Such as::
 
         minstep = user_override.pick("usaxs_minstep", 0.000045)
 
