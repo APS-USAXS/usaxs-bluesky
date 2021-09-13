@@ -153,13 +153,15 @@ def verify_commands(commands):
     for command in commands:
         action, args, i, raw_command = command
         if action.lower() in scan_actions:
+            #if args[2].isnumeric() is False :
+            #    list_of_errors.append(f"line {i}: thickness incorrect for : {raw_command.strip()}")
             try:
                 sx = float(args[0])
                 sy = float(args[1])
                 sth = float(args[2])
                 snm = args[3]
-            except (IndexError,ValueError):
-                list_of_errors.append(f"line {i}: Improper command : {raw_command.strip()}")
+            except (IndexError,ValueError) as exc:
+                list_of_errors.append(f"line {i}: Improper command : {raw_command.strip()} : {exc}")
                 continue
             # check sx against travel limits
             if sx < s_stage.x.low_limit :
@@ -172,8 +174,9 @@ def verify_commands(commands):
             if sy > s_stage.y.high_limit :
                 list_of_errors.append(f"line {i}: SY high limit: value {sy} > high limit {s_stage.y.high_limit},  command: {raw_command.strip()}")
             # check sth for reasonable sample thickness value
-            if sth.isnumeric() is False :
-                list_of_errors.append(f"line {i}: thickness incorrect for : {raw_command.strip()}")
+            if sth < 0:
+                print(f"{sth = } from args[2] = float('{args[2]}') -- thickness problem")
+            #    list_of_errors.append(f"line {i}: thickness incorrect for : {raw_command.strip()}")
             # check snm for reasonable sample title value
     if len(list_of_errors) > 0:
         err_msg="Errors were found in command file. Cannot continue. List of errors:\n"+"\n".join(list_of_errors)
