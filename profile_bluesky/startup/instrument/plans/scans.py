@@ -45,6 +45,7 @@ from ..devices import upd_controls, I0_controls, I00_controls, trd_controls
 from ..devices import usaxs_flyscan
 from ..devices import usaxs_q_calc
 from ..devices import user_data
+from ..devices import user_override
 from ..devices import waxsx, waxs_det
 from ..devices.suspenders import suspend_BeamInHutch
 from ..framework import bec, RE, specwriter
@@ -71,6 +72,8 @@ from ..utils.a2q_q2a import angle2q, q2angle
 AD_FILE_TEMPLATE = "%s%s_%4.4d.hdf"
 LOCAL_FILE_TEMPLATE = "%s_%04d.hdf"
 MASTER_TIMEOUT = 60
+user_override.register("useDynamicTime")
+
 
 def preUSAXStune(md={}):
     """
@@ -377,12 +380,26 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
         scan_title = scan_title,
         )
 
+    uascan_path = techniqueSubdirectory("usaxs")
+    uascan_file_name = (
+        f"{scan_title_clean}"
+        #f"_{plan_name}"
+        f"_{terms.FlyScan.order_number.get():04d}"
+        ".h5"
+    )
+    _md["hdf5_path"] = uascan_path
+    _md["hdf5_file"] = uascan_file_name
+    logger.info("USAXSscan HDF5 data path: %s", _md["hdf5_path"])
+    logger.info("USAXSscan HDF5 data file: %s", _md["hdf5_file"])
+    logger.info("*"*10)  # this line gets clobbered on the console
+
     startAngle = terms.USAXS.ar_val_center.get()- q2angle(terms.USAXS.start_offset.get(),monochromator.dcm.wavelength.get())
     endAngle = terms.USAXS.ar_val_center.get()-q2angle(terms.USAXS.finish.get(),monochromator.dcm.wavelength.get())
     bec.disable_plots()
 
     yield from record_sample_image_on_demand("usaxs", scan_title_clean, _md)
 
+    use_dynamic_time = user_override.pick("useDynamicTime", terms.USAXS.useDynamicTime.get())
     yield from uascan(
         startAngle,
         terms.USAXS.ar_val_center.get(),
@@ -395,7 +412,7 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
         terms.USAXS.SDD.get(),
         terms.USAXS.AY0.get(),
         terms.USAXS.SAD.get(),
-        useDynamicTime=terms.USAXS.useDynamicTime.get(),
+        useDynamicTime=use_dynamic_time,
         md=_md
     )
     bec.enable_plots()
