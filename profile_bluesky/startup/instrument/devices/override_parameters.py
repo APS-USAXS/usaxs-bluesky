@@ -33,7 +33,7 @@ class UserOverride:
     handling.  Such as::
 
         user_override.register("usaxs_minstep")
-    
+
     Then later::
 
         minstep = user_override.pick("usaxs_minstep", 0.000045)
@@ -90,7 +90,7 @@ class UserOverride:
         if value == self.undefined:
             value = default
         return value
-    
+
     def summary(self):
         """
         Print a table summarizing the overrides.
