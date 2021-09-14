@@ -47,6 +47,10 @@ from .mode_changes import mode_USAXS
 from .requested_stop import IfRequestedStopBeforeNextScan
 
 
+# used in instrument_default_tune_ranges() below
+user_override.register("usaxs_minstep")
+
+
 def _tune_base_(axis, md={}):
     """
     plan for simple tune and report
@@ -243,6 +247,7 @@ def instrument_default_tune_ranges():
         ms_stage.rp.tuner.width = 5
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000045)
+        logger.info("Setting minstep to %s", minstep)
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 10.99 <= monochromator.dcm.energy.get() < 12.99:   # Si 220 crystals
@@ -253,6 +258,7 @@ def instrument_default_tune_ranges():
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000035)
+        logger.info("Setting minstep to %s", minstep)
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 12.99 <= monochromator.dcm.energy.get() < 18.1:   # Si 220 crystals
@@ -263,6 +269,7 @@ def instrument_default_tune_ranges():
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000025)
+        logger.info("Setting minstep to %s", minstep)
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 18.1 <= monochromator.dcm.energy.get() < 20.8:   # Si 220 crystals
@@ -273,6 +280,7 @@ def instrument_default_tune_ranges():
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000025)
+        logger.info("Setting minstep to %s", minstep)
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 20.8 <= monochromator.dcm.energy.get():   # Si 220 crystals
@@ -283,6 +291,7 @@ def instrument_default_tune_ranges():
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000025)
+        logger.info("Setting minstep to %s", minstep)
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
 

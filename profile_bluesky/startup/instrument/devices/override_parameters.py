@@ -16,10 +16,25 @@ class UserOverride:
     """
     Define parameters that can be overriden from a user configuration file.
 
-    To add additional parameter names that a user might override, define
-    the new name in the ``reset()`` method below as shown for
-    ``usaxs_minstep``.  Refer to ``plans.axis_tuning`` for example back-end
+    These parameters are supported in other code used by this instrument.
+
+    =============== ============================
+    method          usage
+    =============== ============================
+    ``register()``  First, register a new parameter name to be supported by user overrides.
+    ``set()``       Define an override value for a known parameter.
+    ``pick()``      Choose value for a known parameter, picking between override and default value.
+    ``summary()``   Print a table of all known parameters and values.
+    ``reset()``     Remove an override value for a known parameter.  (sets it to undefined)
+    ``reset_all()`` Remove override values for all known parameters.
+    =============== ============================
+
+    Refer to ``plans.axis_tuning`` for example back-end
     handling.  Such as::
+
+        user_override.register("usaxs_minstep")
+    
+    Then later::
 
         minstep = user_override.pick("usaxs_minstep", 0.000045)
 
@@ -29,50 +44,64 @@ class UserOverride:
 
     and then override the attribute(s) as desired::
 
-        user_override.usaxs_minstep = 1.0e-5
-
-    To clear all the override parameters, call ``user_override.reset()``.
-    To remove a specific override (and regain the default setting used
-    by the plan), set the value to ``user_override.undefined``, such as:
-    ``user_override.usaxs_minstep = user_override.undefined``.
+        user_override.set("usaxs_minstep", 1.0e-5)
     """
 
     def __init__(self):
         # ALWAYS use ``user_override.undefined`` for comparisons and resets.
         self.undefined = object()
+        self._parameters = {}
 
-        self.reset()
+    def register(self, parameter_name):
+        """
+        Register a new parameter name.
+        """
+        if parameter_name not in self._parameters:
+            self._parameters[parameter_name] = self.undefined
 
-    def reset(self):
+    def set(self, parameter_name, value):
+        """
+        Set value of a known parameter.
+        """
+        if parameter_name not in self._parameters:
+            raise KeyError(f"Unknown {parameter_name = }.  Should call register() first.")
+        self._parameters[parameter_name] = value
+
+    def reset(self, parameter_name):
+        """
+        Remove the override of a known parameter.
+        """
+        if parameter_name not in self._parameters:
+            raise KeyError(f"Unknown {parameter_name = }.  Should call register() first.")
+        self._parameters[parameter_name] = self.undefined
+
+    def reset_all(self):
         """
         Change all override values back to undefined.
         """
-
-        # used in instrument.plans.axis_tuning.instrument_default_tune_ranges
-        self.usaxs_minstep = self.undefined
+        for parm in self._parameters.keys():
+            self.reset(parm)
 
     def pick(self, parameter, default):
         """
         Either pick the override parameter value if defined, or the default.
         """
-        try:
-            obj = getattr(self, parameter)
-            if obj != self.undefined:
-                return obj
-        except:
-            pass
-        return default
+        value = self._parameters.get(parameter, default)
+        if value == self.undefined:
+            value = default
+        return value
     
     def summary(self):
         """
         Print a table summarizing the overrides.
+
+        Parameter names that have no override value will be reported
+        as ``--undefined--`.
         """
         tbl = pyRestTable.Table()
         tbl.labels = "parameter value".split()
         methods = "pick reset summary undefined".split()
-        for parm in dir(self):
-            if parm.startswith("_") or parm in methods:
-                continue
+        for parm in self._parameters.keys():
             tbl.addRow((parm, self.pick(parm, "--undefined--")))
         print(tbl)
 
