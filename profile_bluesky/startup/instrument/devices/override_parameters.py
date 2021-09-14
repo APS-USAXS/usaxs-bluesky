@@ -64,7 +64,9 @@ class UserOverride:
         Set value of a known parameter.
         """
         if parameter_name not in self._parameters:
-            raise KeyError(f"Unknown {parameter_name = }.  Should call register() first.")
+            raise KeyError(
+                f"Unknown {parameter_name = }.  Should call register() first."
+            )
         self._parameters[parameter_name] = value
 
     def reset(self, parameter_name):
@@ -72,7 +74,9 @@ class UserOverride:
         Remove the override of a known parameter.
         """
         if parameter_name not in self._parameters:
-            raise KeyError(f"Unknown {parameter_name = }.  Should call register() first.")
+            raise KeyError(
+                f"Unknown {parameter_name = }.  Should call register() first."
+            )
         self._parameters[parameter_name] = self.undefined
 
     def reset_all(self):
