@@ -399,7 +399,9 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
 
     yield from record_sample_image_on_demand("usaxs", scan_title_clean, _md)
 
-    use_dynamic_time = user_override.pick("useDynamicTime", terms.USAXS.useDynamicTime.get())
+    use_dynamic_time = user_override.pick(
+        "useDynamicTime", terms.USAXS.useDynamicTime.get()
+    )
     yield from uascan(
         startAngle,
         terms.USAXS.ar_val_center.get(),
