@@ -105,7 +105,7 @@ class UserOverride:
         tbl = pyRestTable.Table()
         tbl.labels = "parameter value".split()
         methods = "pick reset summary undefined".split()
-        for parm in self._parameters.keys():
+        for parm in sorted(self._parameters.keys()):
             tbl.addRow((parm, self.pick(parm, "--undefined--")))
         print(tbl)
 
