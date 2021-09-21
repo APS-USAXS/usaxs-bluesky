@@ -48,6 +48,7 @@ def record_sample_image_on_demand(technique_name, filename_base, _md):
 
         try:
             yield from det.image_prep(path, filename_base, order_number)
+            yield from bps.sleep(0.1)  # avoid timeouts when staging, guess that this fixes it
             yield from det.take_image()
 
             image_name = det.image_file_name
