@@ -20,7 +20,6 @@ from bluesky import plan_stubs as bps
 from ophyd import ADComponent
 from ophyd import AreaDetector
 from ophyd import ColorConvPlugin
-from ophyd import Component
 from ophyd import EpicsSignal
 from ophyd import ImagePlugin
 from ophyd import PointGreyDetectorCam
