@@ -203,6 +203,7 @@ def before_plan(md=None):
     if md is None:
         md = {}
     from .scans import preSWAXStune, preUSAXStune
+    from ..devices import a_shutter_autoopen
 
     if terms.preUSAXStune.needed:
         # tune at previous sample position
@@ -213,7 +214,8 @@ def before_plan(md=None):
             yield from preUSAXStune(md=md)
         else:
             yield from preSWAXStune(md=md)
-
+    
+    yield from bps.mv(a_shutter_autoopen, 1)
 
 def after_plan(weight=1, md=None):
     """Actions after every data collection plan."""
