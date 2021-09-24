@@ -42,6 +42,7 @@ from ..devices import measure_background
 from ..devices import saxs_det, waxs_det
 from ..devices import terms
 from ..devices import ti_filter_shutter
+from ..devices import a_shutter_autoopen
 from ..devices import upd_controls, I0_controls, I00_controls, trd_controls
 from ..devices import user_data
 from ..utils.quoted_line import split_quoted_line
@@ -113,7 +114,9 @@ def before_command_list(md=None, commands=None):
         ti_filter_shutter, "close",
         terms.SAXS.collecting, 0,
         terms.WAXS.collecting, 0,
+        a_shutter_autoopen, 1,
     )
+  
     if constants["MEASURE_DARK_CURRENTS"]:
         yield from measure_background(
             [upd_controls, I0_controls, I00_controls, trd_controls],

@@ -9,6 +9,7 @@ __all__ = [
     'mono_shutter',
     'ti_filter_shutter',
     'usaxs_shutter',
+    'a_shutter_autoopen',
 ]
 
 from ..session_logs import logger
@@ -18,6 +19,8 @@ logger.info(__file__)
 from apstools.devices import ApsPssShutterWithStatus
 from apstools.devices import EpicsOnOffShutter
 from apstools.devices import SimulatedApsPssShutterWithStatus
+from ophyd import EpicsSignal
+from ophyd import Signal
 import time
 
 from .aps_source import aps
@@ -39,6 +42,10 @@ if aps.inUserOperations and operations_in_9idc():
         "9idcLAX:userTran3.A",
         name="usaxs_shutter")
 
+    a_shutter_autoopen = EpicsSignal(
+        "9ida:AShtr:Enable",
+        name="a_shutter_autoopen")
+
 else:
     logger.warning("!"*30)
     if operations_in_9idc():
@@ -50,6 +57,7 @@ else:
     FE_shutter = SimulatedApsPssShutterWithStatus(name="FE_shutter")
     mono_shutter = SimulatedApsPssShutterWithStatus(name="mono_shutter")
     usaxs_shutter = SimulatedApsPssShutterWithStatus(name="usaxs_shutter")
+    a_shutter_autoopen = Signal(name="a_shutter_autoopen", value=0)
 
 
 ti_filter_shutter = usaxs_shutter       # alias
@@ -62,3 +70,5 @@ connect_delay_s = 1
 while not mono_shutter.pss_state.connected:
     logger.info(f"Waiting {connect_delay_s}s for mono shutter PV to connect")
     time.sleep(connect_delay_s)
+
+
