@@ -20,6 +20,7 @@ from apstools.devices import ApsPssShutterWithStatus
 from apstools.devices import EpicsOnOffShutter
 from apstools.devices import SimulatedApsPssShutterWithStatus
 from ophyd import EpicsSignal
+from ophyd import Signal
 import time
 
 from .aps_source import aps
@@ -56,6 +57,7 @@ else:
     FE_shutter = SimulatedApsPssShutterWithStatus(name="FE_shutter")
     mono_shutter = SimulatedApsPssShutterWithStatus(name="mono_shutter")
     usaxs_shutter = SimulatedApsPssShutterWithStatus(name="usaxs_shutter")
+    a_shutter_autoopen = Signal(name="a_shutter_autoopen")
 
 
 ti_filter_shutter = usaxs_shutter       # alias
