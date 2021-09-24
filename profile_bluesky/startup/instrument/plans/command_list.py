@@ -114,7 +114,9 @@ def before_command_list(md=None, commands=None):
         ti_filter_shutter, "close",
         terms.SAXS.collecting, 0,
         terms.WAXS.collecting, 0,
+        a_shutter_autoopen, 1,
     )
+  
     if constants["MEASURE_DARK_CURRENTS"]:
         yield from measure_background(
             [upd_controls, I0_controls, I00_controls, trd_controls],
@@ -214,8 +216,7 @@ def before_plan(md=None):
             yield from preUSAXStune(md=md)
         else:
             yield from preSWAXStune(md=md)
-    
-    yield from bps.mv(a_shutter_autoopen, 1)
+
 
 def after_plan(weight=1, md=None):
     """Actions after every data collection plan."""
