@@ -42,6 +42,7 @@ from ..devices import measure_background
 from ..devices import saxs_det, waxs_det
 from ..devices import terms
 from ..devices import ti_filter_shutter
+from ..devices import a_shutter_autoopen
 from ..devices import upd_controls, I0_controls, I00_controls, trd_controls
 from ..devices import user_data
 from ..utils.quoted_line import split_quoted_line
@@ -203,7 +204,6 @@ def before_plan(md=None):
     if md is None:
         md = {}
     from .scans import preSWAXStune, preUSAXStune
-    from ..devices import a_shutter_autoopen
 
     if terms.preUSAXStune.needed:
         # tune at previous sample position
