@@ -12,9 +12,9 @@ import logging  # TODO: switch back for operations
 
 logger = logging.getLogger(__name__)
 
-# from ophyd import EpicsSignal
 from ophyd import Component
 from ophyd import Device
+from ophyd import EpicsSignal
 from ophyd import EpicsSignalRO
 from ophyd import EpicsSignalWithRBV
 from ophyd import PVPositioner
@@ -32,6 +32,7 @@ class PTC10AioChannel(Device):
     iotype = Component(EpicsSignalWithRBV, "ioType", kind="config", string=True)
     setpoint = Component(EpicsSignalWithRBV, "setPoint", kind="config")
     ramprate = Component(EpicsSignalWithRBV, "rampRate", kind="config")
+    offswitch = Component(EpicsSignal, "off", kind="config")
 
     pidmode = Component(EpicsSignalWithRBV, "pid:mode", kind="config", string=True)
     P = Component(EpicsSignalWithRBV, "pid:P", kind="config")
@@ -50,6 +51,7 @@ class PTC10RtdChannel(Device):
     SRS PTC10 RTD module channel
     """
 
+    temperature = Component(EpicsSignalRO, "temperature", kind="normal")
     units = Component(EpicsSignalRO, "units_RBV", kind="config", string=True)
     sensor = Component(EpicsSignalWithRBV, "sensor", kind="config", string=True)
     channelrange = Component(EpicsSignalWithRBV, "range", kind="config", string=True)
@@ -100,9 +102,13 @@ class USAXS_PTC10(PVPositioner):
 
     # PTC10 RTD module
     rtd = Component(PTC10RtdChannel, "3A:")
+    # rtdB = Component(PTC10RtdChannel, "3B:")  # TODO: in template, not in GUI
 
     # PTC10 AIO module
     pid = Component(PTC10AioChannel, "5A:")
+    # pidB = Component(PTC10AioChannel, "5B:")  # TODO: in template, not in GUI
+    # pidC = Component(PTC10AioChannel, "5C:")  # TODO: in template, not in GUI
+    # pidD = Component(PTC10AioChannel, "5D:")  # TODO: in template, not in GUI
 
     def cb_readback(self, *args, **kwargs):
         """
