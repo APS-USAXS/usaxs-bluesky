@@ -102,7 +102,7 @@ class USAXS_PTC10(PVPositioner):
     rtd = Component(PTC10RtdChannel, "3A:")
 
     # PTC10 AIO module
-    aio = Component(PTC10AioChannel, "5A:")
+    pid = Component(PTC10AioChannel, "5A:")
 
     def cb_readback(self, *args, **kwargs):
         """
