@@ -1,13 +1,15 @@
-
 """
 PTC10 Programmable Temperature Controller
 """
 
-__all__ = ["ptc10", ]
+__all__ = [
+    "ptc10",
+]
 
 # from ..session_logs import logger
 # logger.info(__file__)
 import logging  # TODO: switch back for operations
+
 logger = logging.getLogger(__name__)
 
 # from ophyd import EpicsSignal
@@ -23,6 +25,7 @@ class PTC10AioChannel(Device):
     """
     SRS PTC10 AIO module
     """
+
     voltage = Component(EpicsSignalRO, "voltage_RBV", kind="config")
     # highlimit = Component(EpicsSignalWithRBV, "highLimit", kind="config")
     lowlimit = Component(EpicsSignalWithRBV, "lowLimit", kind="config")
@@ -46,6 +49,7 @@ class PTC10RtdChannel(Device):
     """
     SRS PTC10 RTD module channel
     """
+
     units = Component(EpicsSignalRO, "units_RBV", kind="config", string=True)
     sensor = Component(EpicsSignalWithRBV, "sensor", kind="config", string=True)
     channelrange = Component(EpicsSignalWithRBV, "range", kind="config", string=True)
@@ -67,6 +71,7 @@ class USAXS_PTC10(PVPositioner):
     * PTC10_rtd_chan.db (channels 3A, 3B)
     * PTC10_aio_chan.db (channels 5A, 5B, 5C, 5D)
     """
+
     # PVPositioner interface
     readback = Component(EpicsSignalRO, "2A:temperature", kind="hinted")
     setpoint = Component(EpicsSignalWithRBV, "5A:highLimit", kind="hinted")
@@ -75,17 +80,23 @@ class USAXS_PTC10(PVPositioner):
     # TODO: stop Signal (and how to handle that)
 
     # for computation of soft `done` signal
-    tolerance = Component(Signal, value=1, kind="config")  # default +/- 1 degree for "at temperature"
+    tolerance = Component(
+        Signal, value=1, kind="config"
+    )  # default +/- 1 degree for "at temperature"
     report_dmov_changes = Component(Signal, value=True, kind="omitted")
 
     # PTC10 base
     enable = Component(EpicsSignalWithRBV, "outputEnable", kind="config")
 
     # PTC10 thermocouple module
-    temperatureB = Component(EpicsSignalRO, "2B:temperature", kind="hinted")  # TODO: how used?
+    temperatureB = Component(
+        EpicsSignalRO, "2B:temperature", kind="hinted"
+    )  # TODO: how used?
     temperatureC = Component(EpicsSignalRO, "2C:temperature", kind="normal")
     # temperatureD = Component(EpicsSignalRO, "2D:temperature", kind="omitted")  # it's a NaN now
-    coldj2 = Component(EpicsSignalRO, "ColdJ2:temperature", kind="normal")  # TODO: how used?
+    coldj2 = Component(
+        EpicsSignalRO, "ColdJ2:temperature", kind="normal"
+    )  # TODO: how used?
 
     # PTC10 RTD module
     rtd = Component(PTC10RtdChannel, "3A:")
