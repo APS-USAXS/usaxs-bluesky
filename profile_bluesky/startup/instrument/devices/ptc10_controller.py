@@ -6,11 +6,8 @@ __all__ = [
     "ptc10",
 ]
 
-# from ..session_logs import logger
-# logger.info(__file__)
-import logging  # TODO: switch back for operations
-
-logger = logging.getLogger(__name__)
+from ..session_logs import logger
+logger.info(__file__)
 
 from ophyd import Component
 from ophyd import Device
@@ -72,11 +69,19 @@ class USAXS_PTC10(PVPositioner):
     * PTC10_tc_chan.db  (channels 2A, 2B, 2C, 2D, ColdJ2)
     * PTC10_rtd_chan.db (channels 3A, 3B)
     * PTC10_aio_chan.db (channels 5A, 5B, 5C, 5D)
+
+    USAGE
+
+    * Change the temperature and wait to get there: ``yield from bps.mv(ptc10, 75)``
+    * Change the temperature and not wait: ``yield from bps.mv(ptc10.setpoint, 75)``
+    * Change other parameter: ``yield from bps.mv(ptc10.tolerance, 0.1)``
+    * To get temperature: ``ptc10.position``  (because it is a **positioner**)
+    * Is it at temperature?:  ``ptc10.done.get()``
     """
 
     # PVPositioner interface
     readback = Component(EpicsSignalRO, "2A:temperature", kind="hinted")
-    setpoint = Component(EpicsSignalWithRBV, "5A:highLimit", kind="hinted")
+    setpoint = Component(EpicsSignalWithRBV, "5A:setPoint", kind="hinted")
     done = Component(Signal, value=True, kind="omitted")
     done_value = True
     # TODO: stop Signal (and how to handle that)
@@ -88,27 +93,27 @@ class USAXS_PTC10(PVPositioner):
     report_dmov_changes = Component(Signal, value=True, kind="omitted")
 
     # PTC10 base
-    enable = Component(EpicsSignalWithRBV, "outputEnable", kind="config")
+    enable = Component(EpicsSignalWithRBV, "outputEnable", kind="config", string=True)
 
     # PTC10 thermocouple module
     temperatureB = Component(
         EpicsSignalRO, "2B:temperature", kind="hinted"
-    )  # TODO: how used?
+    )
     temperatureC = Component(EpicsSignalRO, "2C:temperature", kind="normal")
     # temperatureD = Component(EpicsSignalRO, "2D:temperature", kind="omitted")  # it's a NaN now
     coldj2 = Component(
         EpicsSignalRO, "ColdJ2:temperature", kind="normal"
-    )  # TODO: how used?
+    )
 
     # PTC10 RTD module
     rtd = Component(PTC10RtdChannel, "3A:")
-    # rtdB = Component(PTC10RtdChannel, "3B:")  # TODO: in template, not in GUI
+    # rtdB = Component(PTC10RtdChannel, "3B:")  # unused now
 
     # PTC10 AIO module
     pid = Component(PTC10AioChannel, "5A:")
-    # pidB = Component(PTC10AioChannel, "5B:")  # TODO: in template, not in GUI
-    # pidC = Component(PTC10AioChannel, "5C:")  # TODO: in template, not in GUI
-    # pidD = Component(PTC10AioChannel, "5D:")  # TODO: in template, not in GUI
+    # pidB = Component(PTC10AioChannel, "5B:")  # unused now
+    # pidC = Component(PTC10AioChannel, "5C:")  # unused now
+    # pidD = Component(PTC10AioChannel, "5D:")  # unused now
 
     def cb_readback(self, *args, **kwargs):
         """
