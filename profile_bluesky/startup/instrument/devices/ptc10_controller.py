@@ -145,6 +145,20 @@ class USAXS_PTC10(PVPositioner):
         self.readback.subscribe(self.cb_readback)
         self.setpoint.subscribe(self.cb_setpoint)
 
+    @property
+    def inposition(self):
+        """
+        Report (boolean) if positioner is done.
+        """
+        return self.done.get() == self.done_value
+
+    def stop(self, *, success=False):
+        """
+        Hold the current readback when the stop() method is called and not done.
+        """
+        if not self.done.get():
+            self.setpoint.put(self.position)
+
 
 ptc10 = USAXS_PTC10("9idcTEMP:tc1:", name="ptc10")
 ptc10.report_dmov_changes.put(True)  # a diagnostic
