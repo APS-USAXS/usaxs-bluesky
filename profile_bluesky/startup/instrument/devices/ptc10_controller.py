@@ -84,7 +84,6 @@ class USAXS_PTC10(PVPositioner):
     setpoint = Component(EpicsSignalWithRBV, "5A:setPoint", kind="hinted")
     done = Component(Signal, value=True, kind="omitted")
     done_value = True
-    # TODO: stop Signal (and how to handle that)
 
     # for computation of soft `done` signal
     tolerance = Component(
