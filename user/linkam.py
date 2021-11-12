@@ -12,6 +12,11 @@ import time
 from instrument.devices import linkam_ci94, linkam_tc1
 from instrument.plans import SAXS, USAXSscan, WAXS
 from instrument.plans import before_command_list, after_command_list 
+from ophyd import Signal
+
+linkam_debug = Signal(name="linkam_debug",value=False)
+#   in command line run:
+#linkam_debug.put(True)
 
 def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, temp2, rate2, md={}):
     """
@@ -51,13 +56,13 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     #linkam = linkam_ci94   #this is old TS1500 NIST from LAX
     logger.info(f"Linkam controller PV prefix={linkam.prefix}")
     
-    yield from before_command_list()                #this will run usual startup scripts for scans
+    yield from before_command_list(linkam_debug.get())   #this will run usual startup scripts for scans
     
     # Collect data at 40C as Room temperature data. 
     yield from bps.mv(linkam.rate, 200)             #sets the rate of next ramp
     yield from linkam.set_target(40, wait=True)     #sets the temp of to 40C, waits until we get there (no data collection)
     t0 = time.time()                                #reset time to 0 for data collection. 
-    yield from collectAllThree()
+    yield from collectAllThree(linkam_debug.get())
 
     #Heating cycle
     yield from bps.mv(linkam.rate, rate1)               #sets the rate of next ramp to rate1 (deg C/min)
@@ -65,7 +70,7 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     logger.info(f"Ramping temperature to {temp1} C")    #logger info.
 
     while not linkam.settled:                           #runs data collection until we reach the temperature temp1.
-        yield from collectAllThree()                    #note, that this checks on temp1 only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
+        yield from collectAllThree(linkam_debug.get())  #note, that this checks on temp1 only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
 
     logger.info(f"Reached temperature, now collecting data for {delay1} seconds")
  
@@ -73,7 +78,7 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     delay1 = delay1min*60                               #convert minutes to seconds
     
     while time.time()-t1 < delay1:                      # collects USAXS/SAXS/WAXS data for delay1 seconds
-        yield from collectAllThree()
+        yield from collectAllThree(linkam_debug.get())
 
     logger.info(f"waited for {delay1} seconds, now changing temperature to {temp2} C")
 
@@ -81,11 +86,11 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     yield from linkam.set_target(temp2, wait=False)     #sets the temp target of next ramp, temp2 is in C. Typically cooling period
 
     while not linkam.settled:                           #runs data collection until we reach temp2
-        yield from collectAllThree()                    
+        yield from collectAllThree(linkam_debug.get())                    
 
     logger.info(f"reached {temp2} C")                   #record we reached tmep2
 
-    yield from collectAllThree()                        #collect USAXS/SAXS/WAXS data at the end, typically temp2 is 40C
+    yield from collectAllThree(linkam_debug.get())      #collect USAXS/SAXS/WAXS data at the end, typically temp2 is 40C
 
     logger.info(f"finished")                            #record end.
     
