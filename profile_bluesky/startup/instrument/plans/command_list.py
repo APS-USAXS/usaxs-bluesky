@@ -102,7 +102,8 @@ def before_command_list(md=None, commands=None):
     """Actions before a command list is run."""
     from .scans import preUSAXStune
 
-    verify_commands(commands)
+    if commands is not None:
+        verify_commands(commands)
 
     if md is None:
         md = {}
