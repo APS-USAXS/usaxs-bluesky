@@ -73,11 +73,11 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
 
     while not linkam.settled:                           #runs data collection until we reach the temperature temp1.
         yield from collectAllThree(isDebugMode)         #note, that this checks on temp1 only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
-
-    logger.info(f"Reached temperature, now collecting data for {delay1} seconds")
  
     t1 = time.time()                                    #reset timer for data collection
     delay1 = delay1min*60                               #convert minutes to seconds
+
+    logger.info(f"Reached temperature, now collecting data for {delay1} seconds")
     
     while time.time()-t1 < delay1:                      # collects USAXS/SAXS/WAXS data for delay1 seconds
         yield from collectAllThree(isDebugMode)
