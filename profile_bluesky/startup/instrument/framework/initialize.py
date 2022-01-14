@@ -48,6 +48,9 @@ import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
 import numpy as np
 
+# DATABROKER_CATALOG = "9idc_usaxs_retired_2022_01_14"  # was mongodb_config in different format
+DATABROKER_CATALOG = "9idc_usaxs"
+
 
 def get_md_path():
     md_dir_name = "Bluesky_RunEngine_md"
@@ -83,7 +86,7 @@ if old_md is not None:
 callback_db = {}
 
 # Connect with our mongodb database
-db = databroker.catalog["mongodb_config"].v1
+db = databroker.catalog[DATABROKER_CATALOG].v1
 
 # Subscribe metadatastore to documents.
 # If this is removed, data is not saved to metadatastore.
