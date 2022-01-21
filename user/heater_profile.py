@@ -33,14 +33,14 @@ DAY = 24 * HOUR
 WEEK = 7 * DAY
 
 # Create devices here so we remain independent of the instrument package.
-exit_request_signal = EpicsSignal("9idcLAX:bit14", name="exit_request_signal")
+linkam_exit = EpicsSignal("9idcLAX:bit14", name="exit_request_signal")
 linkam_ci94 = devices.Linkam_CI94_Device("9idcLAX:ci94:", name="linkam_ci94")
 linkam_tc1 = devices.Linkam_T96_Device("9idcLINKAM:tc1:", name="linkam_tc1")
 
 # write output to log file in userDir, name=MMDD-HHmm-heater-log.txt
 user_dir = EpicsSignalRO("9idcLAX:userDir", name="user_dir", string=True)
 
-for o in (exit_request_signal, linkam_ci94, linkam_tc1, user_dir):
+for o in (linkam_exit, linkam_ci94, linkam_tc1, user_dir):
     o.wait_for_connection()
 
 log_file_name = os.path.join(
@@ -149,7 +149,7 @@ def check_for_exit(t0):
     Otherwise return ```None``
     """
     # Watch for user exit while waiting
-    if exit_request_signal.get() in (0, exit_request_signal.enum_strs[0]):
+    if linkam_exit.get() in (0, linkam_exit.enum_strs[0]):
         # no exit requested
         return
 
@@ -215,4 +215,4 @@ def planHeaterProcess():
         return
 
     # DEMO: signal for an orderly exit after first run
-    yield from bps.mv(exit_request_signal, True)
+    yield from bps.mv(linkam_exit, True)
