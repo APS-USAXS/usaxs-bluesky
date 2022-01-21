@@ -21,6 +21,7 @@ which are interfaced here as ophyd EpicsSignal objects.
 See https://github.com/APS-USAXS/ipython-usaxs/issues/482 for details.
 """
 
+from apstools.utils import run_in_thread
 from bluesky import plan_stubs as bps
 from bluesky import plans as bp
 from bluesky import RunEngine
@@ -57,7 +58,7 @@ from user.heater_profile import planHeaterProcess
 
 
 # keep in sync with instrument.devices.general_terms
-class Parameters_HeaterProcess(Device):
+class Parameters(Device):
     # tell heater process to exit
     linkam_exit = Component(EpicsSignal, "9idcLAX:bit14")
 
@@ -71,20 +72,7 @@ class Parameters_HeaterProcess(Device):
     linkam_trigger = Component(EpicsSignal, "9idcLAX:bit16")
 
 
-def run_in_thread(func):
-    """(decorator) run ``func`` in thread"""
-
-    def wrapper(*args, **kwargs):
-        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-        # https://docs.python.org/3/library/threading.html#threading.Thread.daemon
-        thread.daemon = True
-        thread.start()
-        return thread
-
-    return wrapper
-
-
-process_control = Parameters_HeaterProcess(name="process_control")
+process_control = Parameters(name="process_control")
 PULSE_MAX = 10000  # avoid int overflow
 RE = RunEngine({})  # use our own RE, with no subscriptions
 
