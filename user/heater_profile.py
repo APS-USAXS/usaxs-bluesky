@@ -71,7 +71,7 @@ def readable_time(duration, rounding=2):
     Return a string representation of the duration.
 
     EXAMPLES::
-    
+
         readable_time(425) --> '7m 5s'
         readable_time(1425) --> '23m 45s'
         readable_time(21425) --> '5h 57m 5s'
@@ -216,4 +216,3 @@ def planHeaterProcess():
 
     # DEMO: signal for an orderly exit after first run
     yield from bps.mv(exit_request_signal, True)
-    # -----------------------------------
