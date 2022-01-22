@@ -16,8 +16,8 @@ both of which are in directory ``~/.ipython/profile/bluesky/usaxs_support/``.
 See https://github.com/APS-USAXS/ipython-usaxs/issues/482 for details.
 """
 
-from apstools import devices
-from apstools.devices.linkam_controllers import Linkam_T96_Device
+from apstools.devices import Linkam_CI94_Device
+from apstools.devices import Linkam_T96_Device
 from bluesky import plan_stubs as bps
 from ophyd import EpicsSignal
 from ophyd import EpicsSignalRO
@@ -36,8 +36,8 @@ WEEK = 7 * DAY
 
 # Create devices here so we remain independent of the instrument package.
 linkam_exit = EpicsSignal("9idcLAX:bit14", name="exit_request_signal")
-linkam_ci94 = devices.Linkam_CI94_Device("9idcLAX:ci94:", name="linkam_ci94")
-linkam_tc1 = devices.Linkam_T96_Device("9idcLINKAM:tc1:", name="linkam_tc1")
+linkam_ci94 = Linkam_CI94_Device("9idcLAX:ci94:", name="linkam_ci94")
+linkam_tc1 = Linkam_T96_Device("9idcLINKAM:tc1:", name="linkam_tc1")
 
 # write output to log file in userDir, name=MMDD-HHmm-heater-log.txt
 user_dir = EpicsSignalRO("9idcLAX:userDir", name="user_dir", string=True)
