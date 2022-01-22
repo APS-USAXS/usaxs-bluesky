@@ -52,6 +52,7 @@ if not os.path.exists(path):
 os.chdir(path)
 logger = stdlogpj.standard_logging_setup("process_logger")
 logger.info(__file__)
+pulsing = False
 
 
 from user.heater_profile import planHeaterProcess
@@ -100,7 +101,7 @@ def start10HzPulse():
     """
     logger.info("Starting the 10 Hz pulse...")
     tPulse = time.time()
-    while True:
+    while pulsing:
         if time.time() >= tPulse:
             tPulse = time.time() + 0.1
             process_control.linkam_pulse.put(
@@ -110,6 +111,7 @@ def start10HzPulse():
 
 
 def main():
+    global pulsing
     process_control.wait_for_connection()
     process_control.linkam_exit.put(False)
     process_control.linkam_ready.put(False)
@@ -120,7 +122,7 @@ def main():
         raise ValueError(
             f"Cannot start since {nproc} such process(es) already running."
         )
-
+    pulsing = True
     start10HzPulse()
 
     print(f"{__file__} starting ...")
@@ -130,10 +132,12 @@ def main():
         if process_control.linkam_exit.get():
             # TODO: how to break infinite loop in user's plan?
             #    Use the terminating suspender?
+            #    Raise a custom Exception subclass and catch it here.
+            # or Use another bit PV
             process_control.linkam_exit.put(False)
             process_control.linkam_ready.put(False)
             logger.info("Exit signal received from EPICS.")
-            break
+            continue
         elif process_control.linkam_trigger.get():
             logger.debug("Calling user heater plan")
             process_control.linkam_ready.put(False)
