@@ -173,7 +173,7 @@ def check_for_exit_request(t0):
     raise HeaterStopAndHoldRequested(f"Stop requested after {minutes:.2f}m")
 
 
-def linkam_change_setpoint_and_wait(value):
+def linkam_change_setpoint(value, wait=True):
     """
     BS plan: change the temperature setpoint and wait for inposition.
 
@@ -197,6 +197,9 @@ def linkam_change_setpoint_and_wait(value):
         f"Set {linkam.name} setpoint to"
         f" {linkam.temperature.setpoint.get():.2f} C"
     )
+    if not wait:
+        return
+
     checkpoint = time.time() + 60
     while not linkam.temperature.inposition:
         if time.time() >= checkpoint:
@@ -228,12 +231,12 @@ def planHeaterProcess():
     try:
         # heating process starts
         yield from change_ramp_rate(20)  # TODO: value used in testing
-        yield from linkam_change_setpoint_and_wait(80)  # TODO: value used in testing
+        yield from linkam_change_setpoint(80)  # TODO: value used in testing
         # two hours = 2 * HOUR, two minutes = 2 * MINUTE
         random_testing_hold_time = (1*MINUTE + 12*SECOND)*random.random()  # TODO: value used in testing
         yield from linkam_hold(random_testing_hold_time)
         yield from change_ramp_rate(20)  # TODO: value used in testing
-        yield from linkam_change_setpoint_and_wait(40)  # TODO: value used in testing
+        yield from linkam_change_setpoint(40)  # TODO: value used in testing
         # heating process ends
     except HeaterStopAndHoldRequested:
         return
