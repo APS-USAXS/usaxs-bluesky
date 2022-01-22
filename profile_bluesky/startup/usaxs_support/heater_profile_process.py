@@ -58,7 +58,7 @@ from user.heater_profile import planHeaterProcess
 
 
 # keep in sync with instrument.devices.general_terms
-class Parameters(Device):
+class LinkamProcess(Device):
     # tell heater process to exit
     linkam_exit = Component(EpicsSignal, "9idcLAX:bit14")
 
@@ -72,7 +72,7 @@ class Parameters(Device):
     linkam_trigger = Component(EpicsSignal, "9idcLAX:bit16")
 
 
-process_control = Parameters(name="process_control")
+process_control = LinkamProcess(name="process_control")
 PULSE_MAX = 10000  # avoid int overflow
 RE = RunEngine({})  # use our own RE, with no subscriptions
 
