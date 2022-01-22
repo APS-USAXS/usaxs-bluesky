@@ -17,12 +17,14 @@ See https://github.com/APS-USAXS/ipython-usaxs/issues/482 for details.
 """
 
 from apstools import devices
+from apstools.devices.linkam_controllers import Linkam_T96_Device
 from bluesky import plan_stubs as bps
 from ophyd import EpicsSignal
 from ophyd import EpicsSignalRO
 
 import datetime
 import os
+import random  # for testing
 import time
 
 
@@ -61,8 +63,13 @@ linkam.temperature.tolerance.put(1.0)
 # sync the "inposition" computation
 linkam.temperature.cb_readback()
 
+# easy access to the engineering units
+linkam.units.put(
+    linkam.temperature.readback.metadata["units"]
+)
 
-class StopHeaterPlan(Exception):
+
+class HeaterStopAndHoldRequested(Exception):
     "Exception to stop the heater plan is stopping."
 
 
@@ -119,7 +126,8 @@ def log_it(text):
 
 def linkam_report():
     """Report current values for selected controller."""
-    units = linkam.units.get()
+    # assuming units are "Celsius"
+    units = linkam.units.get()[:1].upper()
     log_it(
         f"{linkam.name}"
         f" T={linkam.temperature.position:.1f}{units}"
@@ -132,36 +140,38 @@ def linkam_report():
 
 def change_ramp_rate(value):
     """BS plan: change controller's ramp rate."""
+    yield from check_for_exit_request(time.time())
     yield from bps.mv(linkam.ramp, value)
     log_it(
-        f"Change {linkam.name} rate to {linkam.ramp.get():.0f} C/min"
+        f"Set {linkam.name} rate to {linkam.ramp.get():.0f} C/min"
     )
 
 
-def check_for_exit(t0):
+def check_for_exit_request(t0):
     """
-    BS plan: Tell linkam controller to stop (a temperature change in progress).
+    BS plan: Hold linkam at current temperature & exit planHeaterProcess().
+
+    Raise ``StopHeaterPlan`` exception if exit was requested.  The 
+    planHeaterProcess() will catch this and return.  Otherwise return ```None``
 
     Can't call linkam.temperature.stop() since that has blocking code.
     Implement that method here by holding current position.
-
-    Raise ``StopHeaterPlan`` exception is exit was requested.
-    Otherwise return ```None``
     """
-    # Watch for user exit while waiting
+    # Watch for user exit request while waiting
     if linkam_exit.get() in (0, linkam_exit.enum_strs[0]):
         # no exit requested
         return
 
-    yield from bps.mv(linkam.temperature, linkam.position)
+    # FIXME: Stopping? or holding at temperature?
+    yield from bps.mv(linkam.temperature, linkam.temperature.position)
     minutes = (time.time() - t0) / 60
     log_it(
         "User requested exit during set"
         f" after {minutes:.2f}m."
-        " Stopping the heater."  # FIXME: Stopping? or holding at temperature?
+        " Stopping the heater and holding at current temperature."
     )
     linkam_report()
-    raise StopHeaterPlan(f"Stop requested after {minutes:.2f}m")
+    raise HeaterStopAndHoldRequested(f"Stop requested after {minutes:.2f}m")
 
 
 def linkam_change_setpoint_and_wait(value):
@@ -176,12 +186,24 @@ def linkam_change_setpoint_and_wait(value):
        Does NOT turn on heater power.
     """
     t0 = time.time()
+    yield from check_for_exit_request(t0)
     yield from bps.mv(
-        linkam.temperature.setpoint, value,
+        linkam.temperature.setpoint, value
     )
-    log_it(f"Change {linkam.name} setpoint to {linkam.setpoint.get():.2f} C")
+    if isinstance(linkam, Linkam_T96_Device):
+        yield from bps.mv(
+            linkam.temperature.actuate, "On"
+        )
+    log_it(
+        f"Set {linkam.name} setpoint to"
+        f" {linkam.temperature.setpoint.get():.2f} C"
+    )
+    checkpoint = time.time() + 60
     while not linkam.temperature.inposition:
-        yield from check_for_exit(t0)
+        if time.time() >= checkpoint:
+            checkpoint = time.time() + 60
+            linkam_report()
+        yield from check_for_exit_request(t0)
         yield from bps.sleep(1)
     log_it(f"Done, that took {time.time()-t0:.2f}s")
     linkam_report()
@@ -189,11 +211,11 @@ def linkam_change_setpoint_and_wait(value):
 
 def linkam_hold(duration):
     """BS plan: hold at temperature for the duration (s)."""
-    log_it("{linkam.name} holding for {readable_time(duration)}")
+    log_it(f"{linkam.name} holding for {readable_time(duration)}")
     t0 = time.time()
     time_expires = t0 + duration
     while time.time() < time_expires:
-        yield from check_for_exit(t0)
+        yield from check_for_exit_request(t0)
         yield from bps.sleep(1)
     log_it(f"{linkam.name} holding period ended")
     linkam_report()
@@ -205,14 +227,18 @@ def planHeaterProcess():
     linkam_report()
 
     try:
-        yield from change_ramp_rate(3)
-        yield from linkam_change_setpoint_and_wait(1083)
+        # heating process starts
+        yield from change_ramp_rate(20)  # TODO: value used in testing
+        yield from linkam_change_setpoint_and_wait(80)  # TODO: value used in testing
         # two hours = 2 * HOUR, two minutes = 2 * MINUTE
-        yield from linkam_hold(3 * HOUR)
-        yield from change_ramp_rate(3)
-        yield from linkam_change_setpoint_and_wait(40)
-    except StopHeaterPlan:
+        random_testing_hold_time = (1*MINUTE + 12*SECOND)*random.random()  # TODO: value used in testing
+        yield from linkam_hold(random_testing_hold_time)
+        yield from change_ramp_rate(20)  # TODO: value used in testing
+        yield from linkam_change_setpoint_and_wait(40)  # TODO: value used in testing
+        # heating process ends
+    except HeaterStopAndHoldRequested:
         return
 
     # DEMO: signal for an orderly exit after first run
+    log_it(f"Ending planHeaterProcess() for {linkam.name}")
     yield from bps.mv(linkam_exit, True)
