@@ -51,11 +51,11 @@ Linkam at desired temperature? | `linkam.temperature.inposition` (True or False)
 Set the controller to 85 C (plan) and wait for `.inposition` | `yield from bps.mv(linkam.temperature, 85)`
 Set the controller to 85 C (plan), do NOT wait | `yield from bps.mv(linkam.temperature.setpoint, 85)`
 Change the _in position_ tolerance (plan) | `yield from bps.mv(linkam.temperature.tolerance, 1.0)`
-Change the ramp rate (plan) | `yield from bps.mv(linkam.temperature.ramp, 20)`
+Change the ramp rate (plan) | `yield from bps.mv(linkam.ramp, 20)`
 Set the controller to 85 C (command line) and wait for `.inposition` | `linkam.temperature.move(85)`
 Set the controller to 85 C (command line), do NOT wait | `linkam.temperature.setpoint.put(85)`
 Change the _in position_ tolerance (command line) | `linkam.temperature.tolerance.put(1.0)`
-Change the ramp rate (command line) | `linkam.temperature.ramp.put(20)`
+Change the ramp rate (command line) | `linkam.ramp.put(20)`
 
 ## Example plan
 
@@ -77,7 +77,7 @@ def my_temperature_sequence(sx, sy, thickness, sample_name, t_start, t_end, t_st
         "temperature_end": t_end,
         "temperature_step": t_step,
     }
-    yield from bps.mv(linkam.temperature.ramp, 100)  # degrees C/minute
+    yield from bps.mv(linkam.ramp, 100)  # degrees C/minute
 
     sign = 1            # assume ascending temperature
     if t_end < t_start:

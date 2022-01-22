@@ -39,7 +39,7 @@ sequence is repeated a number of times.  The whole sequence is tested using
 and then run using:
 `RE(my_custom_plan(...))` (where `...` represents the required arguments).
 
-```
+```python
 def _measure_all_three(sx, sy, thickness, sample_name, md={}):
     """this is used internally, not called on the command line"""
     print("USAXS SAXS WAXS scan")
@@ -57,8 +57,8 @@ def my_custom_plan(sx, sy, thickness, sample_name, temperature, iterations=9, md
         "total_iteration": iterations,
         }
     yield from _measure_all_three(sx, sy, thickness, sample_name, md=md)
-    yield from bps.mv(linkam.rate, 100)			# degrees C/minute
-    yield from linkam.set_target(temperature, wait=True)	# degrees C
+    yield from bps.mv(linkam.ramp, 100)			# degrees C/minute
+    yield from bps.mv(linkam.temperature, temperature)  # degrees C
     for i in range(iterations):
         print(f"Iteration {i+1} of {iterations}, elapsed time = {time.time() - t0:.3f}s")
         md["iteration"] = i+1
