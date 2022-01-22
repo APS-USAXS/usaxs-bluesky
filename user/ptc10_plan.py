@@ -76,9 +76,6 @@ def myPTC10Plan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1, temp2
     # %run -i ptc10_local
     """
 
-    #linkam = linkam_tc1
-    #linkam = linkam_ci94
-    #logger.info(f"Linkam controller PV prefix={linkam.prefix}")
     temp1 = 50
     temp2 = 30
     delay1 = 20
