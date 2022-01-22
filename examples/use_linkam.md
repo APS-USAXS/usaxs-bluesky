@@ -18,65 +18,44 @@ by name in that file.
 ## Basic Controls
 
 The basic controls (derived from 
-[`apstools.devices.ProcessController`](https://apstools.readthedocs.io/en/latest/source/devices.html#apstools.devices.ProcessController))
-are described in the table below.  Keep these terms in mind:
+[`apstools.devices.PVPositionerSoftDoneWithStop`](https://bcda-aps.github.io/apstools/api/_devices.html#apstools.devices.positioner_soft_done.PVPositionerSoftDoneWithStop))
+are described in the table below.  Temperature is in degrees C.
 
-<dl>
-  <dt>signal</dt>
-  <dd>the measured value (temperature, degrees C)</dd>
-  
-  <dt>target</dt>
-  <dd>the desired value (the temperature set point, degrees C)</dd>
-  
-  <dt>tolerance</dt>
-  <dd>the maximum acceptable mismatch between signal and target (degrees C)</dd>
-</dl>
+### Basic features
 
-control | description
---- | ---
-`.set_target()` | Set the controller to a specific temperature
-`.value` | controller's current temperature
-`.settled` | controller at the desired temperature?
-`.target.value` | controller's desired temperature
-`.tolerance.value` | controller is not *settled* if `abs(signal - target) > tolerance`
+description | object
+------ | ------
+Measured temperature | `linkam.temperature.position` (same as `linkam.temperature.readback.get()`)
+Desired temperature | `linkam.temperature.setpoint`
+Ramp rate (degrees C/min) | `linkam.temperature.setpoint`
+Done moving? | `linkam.temperature.done`  (See `.inposition` below)
+_In position_ (at temperature) tolerance | `linkam.temperature.tolerance`
 
-### Basic Controls examples
+Controller is deemed _in position_ when:
 
-In the examples below, replace `linkam_tc1` with the name of your temperature controller if it is different.
+    abs(readback - setpoint) <= tolerance
 
-### `.target.value` : What temperature is `linkam_tc1` set to? 
+In the examples below, use either `linkam = linkam_tc1`
+or `linkam = linkam_ci94`.
 
-    linkam_tc1.target.value
+There's a difference when _setting_ on object on the ipython
+command line setting the object in a bluesky plan.  In a plan, we are instructing the bluesky `RunEngine` what to do, so the command is different.
 
-### `.set_target()` : Set `linkam_tc1` to a specific temperature
+When _reading_ an object, the command is the same for both command line and plan use.
 
-    linkam_tc1.set_target(new_temperature)
+### Controls Examples
 
-By default, this will wait until `linkam_tc1` is *settled* before it returns.
-
-### `.value` : What is the `linkam_tc1` actual temperature now?
-
-    print(linkam_tc1.value)
-
-(note: this is a shortcut to the actual location)
-
-    print(linkam_tc1.signal.value)
-
-### `.settled` : Has `linkam_tc1` reached the desired temperature?
-
-    print(linkam_tc1.settled)
-
-### `.tolerance.value` : How close is *settled*?
-
-How close must the actual temperature (signal) be to the target temperature for `linkam_tc1` to indicate it is *settled*?
-
-    print(linkam_tc1.settled)
-
-### `.tolerance.value` : How to set the `tolerance`*?
-
-From the command line: `linkam_tc1.tolerance.put(2)` (sets it to 2 degrees)
-
-From a plan: `yield from bps.mv(linkam_tc1.tolerance, 2)`
+description | example
+------ | ------
+Linkam at desired temperature? | `linkam.temperature.inposition` (True or False)
+Set the controller to 85 C (plan) and wait for `.inposition` | `yield from bps.mv(linkam.temperature, 85)`
+Set the controller to 85 C (plan), do NOT wait | `yield from bps.mv(linkam.temperature.setpoint, 85)`
+Change the _in position_ tolerance (plan) | `yield from bps.mv(linkam.temperature.tolerance, 1.0)`
+Change the ramp rate (plan) | `yield from bps.mv(linkam.temperature.ramp, 20)`
+Set the controller to 85 C (command line) and wait for `.inposition` | `linkam.temperature.move(85)`
+Set the controller to 85 C (command line), do NOT wait | `linkam.temperature.setpoint.put(85)`
+Change the _in position_ tolerance (command line) | `linkam.temperature.tolerance.put(1.0)`
+Change the ramp rate (command line) | `linkam.temperature.ramp.put(20)`
 
 ## Example plan
 
@@ -84,7 +63,7 @@ This example defines a (bluesky) plan to measure USAXS/SAXS/WAXS
 at a sequence of temperatures.  Place this example code in a python 
 file named `tseq.py` in your current working directory.
 
-```
+```python
 """Temperature sequence"""
 
 def my_temperature_sequence(sx, sy, thickness, sample_name, t_start, t_end, t_step, md={}):
@@ -98,32 +77,36 @@ def my_temperature_sequence(sx, sy, thickness, sample_name, t_start, t_end, t_st
         "temperature_end": t_end,
         "temperature_step": t_step,
     }
-    yield from bps.mv(linkam_tc1.rate, 100)            # degrees C/minute
+    yield from bps.mv(linkam.temperature.ramp, 100)  # degrees C/minute
 
     sign = 1            # assume ascending temperature
     if t_end < t_start:
         sign = -1        # Aha! Descending temperature
     t_lo = min(t_start, t_end)
     t_hi = max(t_start, t_end)
-    temperature = t_start
+    temperature = t_start  # degrees C
 
     while t_lo <= temperature <= t_hi:
         t0 = time.time()
         md["temperature_set_point"] = temperature
-        yield from linkam_tc1.set_target(temperature, wait=True)    # degrees C
+        yield from bps.mv(linkam.temperature, temperature)
         print(f"Reached {temperature:.1f}C in {time.time() - t0:.3f}s")
         md["temperature_settling_time"] = time.time() - t0
         
-        md["temperature_actual"] = linkam_tc1.value
+        md["temperature_actual"] = linkam.temperature.position
         yield from FlyScan(sx, sy, thickness, sample_name, md=md)
         
-        md["temperature_actual"] = linkam_tc1.value
+        md["temperature_actual"] = linkam.temperature.position
         yield from SAXS(sx, sy, thickness, sample_name, md=md)
         
-        md["temperature_actual"] = linkam_tc1.value
+        md["temperature_actual"] = linkam.temperature.position
         yield from WAXS(sx, sy, thickness, sample_name, md=md)
         
-        print(f"All scans complete at {temperature:.1f}C in {time.time() - t0:.3f}s")
+        print(
+            "All scans complete"
+            f" at {linkam.temperature.position:.1f}C"
+            f" in {time.time() - t0:.3f}s"
+        )
         temperature += sign * abs(t_step)
 ```
 
