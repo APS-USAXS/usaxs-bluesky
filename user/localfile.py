@@ -8,11 +8,11 @@ logger.info(__file__)
 from instrument.utils.cleanup_text import cleanupText
 from instrument.utils import getSampleTitle
 from instrument.utils import setSampleTitleFunction
-import os
+import pathlib
 
 
 def myNamer(title):
-    return f"{os.path.exists(title)} : {title}"
+    return f"{pathlib.Path(title).exists()} : {title}"
 
 
 setSampleTitleFunction(myNamer)

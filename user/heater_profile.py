@@ -23,7 +23,7 @@ from ophyd import EpicsSignal
 from ophyd import EpicsSignalRO
 
 import datetime
-import os
+import pathlib
 import random  # for testing
 import time
 
@@ -45,8 +45,7 @@ user_dir = EpicsSignalRO("9idcLAX:userDir", name="user_dir", string=True)
 for o in (linkam_exit, linkam_ci94, linkam_tc1, user_dir):
     o.wait_for_connection()
 
-log_file_name = os.path.join(
-    user_dir.get(),
+log_file_name = pathlib.Path(user_dir.get()) / (
     datetime.datetime.now().strftime("%m%d-%H%M-heater-log.txt")
 )
 
@@ -110,7 +109,7 @@ def readable_time(duration, rounding=2):
 
 def log_it(text):
     """Cheap, lazy way to add to log file.  Gotta be better way..."""
-    if not os.path.exists(log_file_name):
+    if not log_file_name.exists():
         # create the file and header
         with open(log_file_name, "w") as f:
             f.write(f"# file: {log_file_name}\n")
