@@ -203,7 +203,7 @@ def linkam_change_setpoint_and_wait(value):
             checkpoint = time.time() + 60
             linkam_report()
         yield from check_for_exit_request(t0)
-        yield from bps.sleep(1)
+        yield from bps.sleep(.1)
     log_it(f"Done, that took {time.time()-t0:.2f}s")
     linkam_report()
 
@@ -215,7 +215,7 @@ def linkam_hold(duration):
     time_expires = t0 + duration
     while time.time() < time_expires:
         yield from check_for_exit_request(t0)
-        yield from bps.sleep(1)
+        yield from bps.sleep(.1)
     log_it(f"{linkam.name} holding period ended")
     linkam_report()
 
