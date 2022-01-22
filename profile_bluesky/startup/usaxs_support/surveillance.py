@@ -16,7 +16,7 @@ EXAMPLE::
 
         t = t_start
         while t < t_end:
-            yield from linkam.set_temperature(t)
+            yield from bps.mv(linkam.temperature, t)
             yield from bp.scan([detector], motor, 10, 20, 120)
             t += t_step
 
