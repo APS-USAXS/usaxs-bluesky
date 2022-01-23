@@ -11,4 +11,7 @@ path = os.path.abspath(
 if path not in sys.path:
     sys.path.append(path)
 
+# terse exception tracebacks
+get_ipython().run_line_magic('xmode', 'Minimal')
+
 from instrument.collection import *
