@@ -15,7 +15,7 @@ __all__ = [
 from ..session_logs import logger
 logger.info(__file__)
 
-from apstools.filewriters import NXWriterAPS
+from apstools.callbacks import NXWriterAPS
 import numpy as np
 import os
 
