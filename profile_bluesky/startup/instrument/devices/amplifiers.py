@@ -94,6 +94,10 @@ NUM_AUTORANGE_GAINS = 5     # common to all autorange sequence programs
 AMPLIFIER_MINIMUM_SETTLING_TIME = 0.01    # reasonable?
 
 
+class ModifiedSwaitRecord(SwaitRecord):
+    enable = None  # remove this Component
+
+
 def _gain_to_str_(gain):    # convenience function
     return ("%.0e" % gain).replace("+", "").replace("e0", "e")
 
@@ -631,7 +635,7 @@ upd_controls = DetectorAmplifierAutorangeDevice(
 )
 #upd_photocurrent = ComputedScalerAmplifierSignal(
 #    name="upd_photocurrent", parent=upd_controls)
-upd_photocurrent_calc = SwaitRecord(
+upd_photocurrent_calc = ModifiedSwaitRecord(
     "9idcLAX:USAXS:upd",
     name="upd_photocurrent_calc")
 upd_photocurrent = upd_photocurrent_calc.get()
@@ -646,7 +650,7 @@ trd_controls = DetectorAmplifierAutorangeDevice(
 )
 #trd_photocurrent = ComputedScalerAmplifierSignal(
 #    name="trd_photocurrent", parent=trd_controls)
-trd_photocurrent_calc = SwaitRecord(
+trd_photocurrent_calc = ModifiedSwaitRecord(
     "9idcLAX:USAXS:trd",
     name="trd_photocurrent_calc")
 trd_photocurrent = trd_photocurrent_calc.get()
@@ -661,7 +665,7 @@ I0_controls = DetectorAmplifierAutorangeDevice(
 )
 #I0_photocurrent = ComputedScalerAmplifierSignal(
 #    name="I0_photocurrent", parent=I0_controls)
-I0_photocurrent_calc = SwaitRecord(
+I0_photocurrent_calc = ModifiedSwaitRecord(
     "9idcLAX:USAXS:I0",
     name="I0_photocurrent_calc")
 I0_photocurrent = I0_photocurrent_calc.get()
@@ -676,13 +680,13 @@ I00_controls = DetectorAmplifierAutorangeDevice(
 )
 #I00_photocurrent = ComputedScalerAmplifierSignal(
 #    name="I00_photocurrent", parent=I00_controls)
-I00_photocurrent_calc = SwaitRecord(
+I00_photocurrent_calc = ModifiedSwaitRecord(
     "9idcLAX:USAXS:I00",
     name="I00_photocurrent_calc")
 I00_photocurrent = I00_photocurrent_calc.get()
 
 
-I000_photocurrent_calc = SwaitRecord(
+I000_photocurrent_calc = ModifiedSwaitRecord(
     "9idcLAX:USAXS:I000",
     name="I000_photocurrent_calc")
 I000_photocurrent = I000_photocurrent_calc.get()
