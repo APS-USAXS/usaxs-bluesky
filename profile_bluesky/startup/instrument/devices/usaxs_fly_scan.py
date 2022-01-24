@@ -8,7 +8,7 @@ __all__ = ["usaxs_flyscan",]
 from ..session_logs import logger
 logger.info(__file__)
 
-from apstools.synApps.busy import BusyStatus
+# from apstools.synApps.busy import BusyStatus
 from apstools.plans import addDeviceDataAsStream
 from apstools.utils import run_in_thread
 from bluesky import plan_stubs as bps
@@ -199,7 +199,7 @@ class UsaxsFlyScanDevice(Device):
         g = uuid.uuid4()
         yield from bps.abs_set(
             self.busy,
-            BusyStatus.busy,
+            self.busy.enum_strs[1],  # BusyStatus.busy,
             group=g,   # waits until done
             timeout=self.scan_time.get() + self.timeout_s
         )
