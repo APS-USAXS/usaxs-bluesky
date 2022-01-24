@@ -14,7 +14,7 @@ logger.info(__file__)
 
 from bluesky import plan_stubs as bps
 from apstools.devices import ApsBssUserInfoDevice
-from apstools.beamtime.apsbss_ophyd import EpicsBssDevice
+from apsbss.apsbss_ophyd import EpicsBssDevice
 from apstools.utils import trim_string_for_EPICS
 from ophyd import Component, Device, EpicsSignal
 

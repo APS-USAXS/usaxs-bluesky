@@ -19,7 +19,7 @@ from ..framework import RE
 from ..framework import specwriter
 from .check_file_exists import filename_exists
 from apstools.utils import cleanupText
-import apstools.beamtime.apsbss
+from apsbss import apsbss
 import datetime
 import os
 import pyRestTable
@@ -47,7 +47,7 @@ def _pick_esaf(user, now, cycle):
     def esafSorter(obj):
         return obj["experimentStartDate"]
 
-    get_esafs = apstools.beamtime.apsbss.getCurrentEsafs
+    get_esafs = apsbss.getCurrentEsafs
     esafs = [
         esaf["esafId"]
         for esaf in sorted(get_esafs(APSBSS_SECTOR), key=esafSorter)
@@ -91,7 +91,7 @@ def _pick_proposal(user, now, cycle):
     def proposalSorter(obj):
         return obj["startTime"]
 
-    get_proposals = apstools.beamtime.apsbss.api_bss.listProposals
+    get_proposals = apsbss.api_bss.listProposals
     proposals = [
         p["id"]
         for p in sorted(
@@ -150,7 +150,7 @@ def matchUserInApsbss(user):
     """
     dt = datetime.datetime.now()
     now = str(dt)
-    cycle = apstools.beamtime.apsbss.getCurrentCycle()
+    cycle = apsbss.getCurrentCycle()
 
     esaf_id = _pick_esaf(user, now, cycle)
     proposal_id = _pick_proposal(user, now, cycle)
@@ -161,18 +161,18 @@ def matchUserInApsbss(user):
         logger.info("Proposal %s", proposal_id)
 
         prefix = apsbss_object.prefix
-        apstools.beamtime.apsbss.epicsSetup(
+        apsbss.epicsSetup(
             prefix,
             APSBSS_BEAMLINE,
             cycle
             )
-        apstools.beamtime.apsbss.epicsClear(prefix)
+        apsbss.epicsClear(prefix)
 
         apsbss_object.esaf.esaf_id.put(esaf_id or "")
         apsbss_object.proposal.proposal_id.put(proposal_id or "")
 
         logger.info("APSBSS PVs updated from APS Oracle databases.")
-        apstools.beamtime.apsbss.epicsUpdate(prefix)
+        apsbss.epicsUpdate(prefix)
 
         table = _apsbss_summary_table(apsbss_object)
         logger.info("ESAF & Proposal Overview:\n%s", str(table))
