@@ -48,18 +48,18 @@ class USAXS_PTC10(PTC10PositionerMixin, PVPositioner):
     # PTC10 base
     enable = Component(EpicsSignalWithRBV, "outputEnable", kind="config", string=True)
 
-    # PTC10 thermocouple module
-    temperatureB = Component(
-        EpicsSignalRO, "2B:temperature", kind="hinted"
-    )
-    temperatureC = Component(EpicsSignalRO, "2C:temperature", kind="normal")
-    # temperatureD = Component(EpicsSignalRO, "2D:temperature", kind="omitted")  # it's a NaN now
-    coldj2 = Component(
-        EpicsSignalRO, "ColdJ2:temperature", kind="normal"
-    )
+    # PTC10 thermocouple module : reads as NaN
+    # temperatureB = Component(
+    #     EpicsSignalRO, "2B:temperature", kind="config"
+    # )
+    # temperatureC = Component(EpicsSignalRO, "2C:temperature", kind="config")
+    # # temperatureD = Component(EpicsSignalRO, "2D:temperature", kind="omitted")  # it's a NaN now
+    # coldj2 = Component(
+    #     EpicsSignalRO, "ColdJ2:temperature", kind="config"
+    # )
 
     # PTC10 RTD module
-    rtd = Component(PTC10RtdChannel, "3A:")
+    # rtd = Component(PTC10RtdChannel, "3A:")  # reads as NaN
     # rtdB = Component(PTC10RtdChannel, "3B:")  # unused now
 
     # PTC10 AIO module
