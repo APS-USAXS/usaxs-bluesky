@@ -72,3 +72,7 @@ class USAXS_PTC10(PTC10PositionerMixin, PVPositioner):
 ptc10 = USAXS_PTC10("9idcTEMP:tc1:", name="ptc10")
 ptc10.report_dmov_changes.put(True)  # a diagnostic
 ptc10.tolerance.put(1.0)  # done when |readback-setpoint|<=tolerance
+
+# aliases to make PTC10 have same terms as Linkam controllers
+ptc10.temperature = ptc10
+ptc10.ramp = ptc10.pid.ramprate
