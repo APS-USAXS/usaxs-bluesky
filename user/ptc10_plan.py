@@ -82,13 +82,13 @@ def myPTC10Plan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1, temp2
     t0 = time.time()
     #yield from collectAllThree()                    #collect RT data
 
-    yield from bps.mv(ptc10.pid.ramprate, 30/60.0)           # user wants C/min, controller wants C/s
-    yield from bps.mv(ptc10.setpoint, temp1)                #Change the temperature and not wait
+    yield from bps.mv(ptc10.ramp, 30/60.0)           # user wants C/min, controller wants C/s
+    yield from bps.mv(ptc10.temperature.setpoint, temp1)                #Change the temperature and not wait
     yield from setheaterOn()
 
     logger.info(f"Ramping temperature to {temp1} C")
 
-    while not ptc10.inposition:                      #runs data collection until next temp
+    while not ptc10.temperature.inposition:                      #runs data collection until next temp
         yield from bps.sleep(5)
         logger.info(f"Still Ramping temperature to {temp1} C")
         #yield from collectAllThree()
@@ -103,8 +103,8 @@ def myPTC10Plan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1, temp2
 
     logger.info(f"waited for {delay1} seconds, now changing temperature to {temp2} C")
 
-    yield from bps.mv(ptc10.pid.ramprate, 20/60.0)       #sets the rate of next ramp
-    yield from bps.mv(ptc10, temp2)                      #Change the temperature and wait to get there
+    yield from bps.mv(ptc10.ramp, 20/60.0)       #sets the rate of next ramp
+    yield from bps.mv(ptc10.temperature, temp2)                      #Change the temperature and wait to get there
 
     logger.info(f"reached {temp2} C")
     yield from setheaterOff()
