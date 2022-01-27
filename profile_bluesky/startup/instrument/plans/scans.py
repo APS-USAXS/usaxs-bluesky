@@ -259,7 +259,7 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     """
     general scan macro for step USAXS for both 1D & 2D collimation
     """
- 
+
     from .command_list import after_plan, before_plan
 
     # bluesky_runengine_running = RE.state != "idle"
@@ -284,7 +284,7 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name.  getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness
@@ -895,15 +895,15 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
     yield from IfRequestedStopBeforeNextScan()
 
-    #logger.debug(f"waxsx start collection ={waxsx.position}")      #this looks like some debugging remnant, still needed? 
+    #logger.debug(f"waxsx start collection ={waxsx.position}")      #this looks like some debugging remnant, still needed?
 
     yield from before_plan()    # MUST come before mode_WAXS since it might tune
 
-    #logger.debug(f"waxsx after before plan ={waxsx.position}")     #this looks like some debugging remnant, still needed? 
+    #logger.debug(f"waxsx after before plan ={waxsx.position}")     #this looks like some debugging remnant, still needed?
 
     yield from mode_WAXS()
 
-    #logger.debug(f"waxsx after mode_WAXS ={waxsx.position}")     #this looks like some debugging remnant, still needed? 
+    #logger.debug(f"waxsx after mode_WAXS ={waxsx.position}")     #this looks like some debugging remnant, still needed?
 
     yield from bps.mv(
         usaxs_slit.v_size, terms.SAXS.v_size.get(),
