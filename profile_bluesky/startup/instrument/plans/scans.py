@@ -246,7 +246,6 @@ def USAXSscan(x, y, thickness_mm, title, md=None):
     """
     general scan macro for fly or step USAXS with 1D or 2D collimation
     """
-    title = getSampleTitle(title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness_mm
     _md["title"] = title
@@ -260,10 +259,7 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     """
     general scan macro for step USAXS for both 1D & 2D collimation
     """
-    _md = apsbss.update_MD(md or {})
-    _md["sample_thickness_mm"] = thickness
-    _md["title"] = scan_title
-
+ 
     from .command_list import after_plan, before_plan
 
     # bluesky_runengine_running = RE.state != "idle"
@@ -286,6 +282,13 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
         s_stage.y, pos_Y,
         timeout=MASTER_TIMEOUT,
     )
+
+    # Update Sample name.  getSampleTitle is used to create proper sample name. It may add time and temperature
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    scan_title = getSampleTitle(scan_title)
+    _md = apsbss.update_MD(md or {})
+    _md["sample_thickness_mm"] = thickness
+    _md["title"] = scan_title
 
     scan_title_clean = cleanupText(scan_title)
 
@@ -466,10 +469,7 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     do one USAXS Fly Scan
     """
     plan_name = "Flyscan"
-    _md = apsbss.update_MD(md or {})
-    _md["sample_thickness_mm"] = thickness
-    _md["title"] = scan_title
-
+ 
     from .command_list import after_plan, before_plan
 
     bluesky_runengine_running = RE.state != "idle"
@@ -492,6 +492,13 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
         s_stage.y, pos_Y,
         timeout=MASTER_TIMEOUT,
     )
+
+    # Update Sample name. getSampleTitle is used to create proper sample name. It may add time and temperature
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    scan_title = getSampleTitle(scan_title)
+    _md = apsbss.update_MD(md or {})
+    _md["sample_thickness_mm"] = thickness
+    _md["title"] = scan_title
 
     scan_title_clean = cleanupText(scan_title)
 
@@ -705,10 +712,6 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     """
     collect SAXS data
     """
-    scan_title = getSampleTitle(scan_title)
-    _md = apsbss.update_MD(md or {})
-    _md["sample_thickness_mm"] = thickness
-    _md["title"] = scan_title
 
     from .command_list import after_plan, before_plan
 
@@ -736,6 +739,13 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         s_stage.y, pos_Y,
         timeout=MASTER_TIMEOUT,
     )
+
+    # Update Sample name. getSampleTitle is used to create proper sample name. It may add time and temperature
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    scan_title = getSampleTitle(scan_title)
+    _md = apsbss.update_MD(md or {})
+    _md["sample_thickness_mm"] = thickness
+    _md["title"] = scan_title
 
     scan_title_clean = cleanupText(scan_title)
 
@@ -880,24 +890,20 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     """
     collect WAXS data
     """
-    scan_title = getSampleTitle(scan_title)
-    _md = apsbss.update_MD(md or {})
-    _md["sample_thickness_mm"] = thickness
-    _md["title"] = scan_title
 
     from .command_list import after_plan, before_plan
 
     yield from IfRequestedStopBeforeNextScan()
 
-    logger.debug(f"waxsx start collection ={waxsx.position}")
+    #logger.debug(f"waxsx start collection ={waxsx.position}")      #this looks like some debugging remnant, still needed? 
 
     yield from before_plan()    # MUST come before mode_WAXS since it might tune
 
-    logger.debug(f"waxsx after before plan ={waxsx.position}")
+    #logger.debug(f"waxsx after before plan ={waxsx.position}")     #this looks like some debugging remnant, still needed? 
 
     yield from mode_WAXS()
 
-    logger.debug(f"waxsx after mode_WAXS ={waxsx.position}")
+    #logger.debug(f"waxsx after mode_WAXS ={waxsx.position}")     #this looks like some debugging remnant, still needed? 
 
     yield from bps.mv(
         usaxs_slit.v_size, terms.SAXS.v_size.get(),
@@ -916,6 +922,13 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         timeout=MASTER_TIMEOUT,
     )
 
+    # Update Sample name.  getSampleTitle is used to create proper sample name. It may add time and temperature
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.     
+    scan_title = getSampleTitle(scan_title)
+    _md = apsbss.update_MD(md or {})
+    _md["sample_thickness_mm"] = thickness
+    _md["title"] = scan_title
+ 
     scan_title_clean = cleanupText(scan_title)
 
     # SPEC-compatibility
