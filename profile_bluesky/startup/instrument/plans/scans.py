@@ -895,15 +895,9 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
     yield from IfRequestedStopBeforeNextScan()
 
-    #logger.debug(f"waxsx start collection ={waxsx.position}")      #this looks like some debugging remnant, still needed?
-
     yield from before_plan()    # MUST come before mode_WAXS since it might tune
 
-    #logger.debug(f"waxsx after before plan ={waxsx.position}")     #this looks like some debugging remnant, still needed?
-
     yield from mode_WAXS()
-
-    #logger.debug(f"waxsx after mode_WAXS ={waxsx.position}")     #this looks like some debugging remnant, still needed?
 
     yield from bps.mv(
         usaxs_slit.v_size, terms.SAXS.v_size.get(),
@@ -1036,8 +1030,6 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     _md['plan_name'] = "WAXS"
     _md["hdf5_file"] = WAXS_file_name
     _md["hdf5_path"] = WAXSscan_path
-
-    logger.debug(f"waxsx before Image collection={waxsx.position}")
 
     yield from record_sample_image_on_demand("waxs", scan_title_clean, _md)
 
