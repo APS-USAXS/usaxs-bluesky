@@ -9,14 +9,42 @@ __all__ = [
 from ..session_logs import logger
 logger.info(__file__)
 
+from bluesky import plan_stubs as bps
 import bluesky.suspenders
 from ophyd import Signal
 
 from ..framework import RE, sd
 from .aps_source import aps
+from .monochromator import monochromator
+from .monochromator import MONO_FEEDBACK_ON
 from .permit import BeamInHutch
 from .shutters import mono_shutter
 from .white_beam_ready_calc import white_beam_ready
+
+
+class FeedbackHandlingDuringSuspension:
+    """
+    Ensure feedback is on while waiting to resume.
+
+    See https://github.com/APS-USAXS/ipython-usaxs/issues/520
+    """
+    previous = None  # feedback setting just before beam dump
+    timeout = 100  # used for setting feedback ON or previous value
+
+    def mono_beam_lost_plan(self):
+        self.previous  = monochromator.feedback.on.get()
+        yield from bps.mv(
+            monochromator.feedback.on, MONO_FEEDBACK_ON,
+            timeout=self.timeout,
+        )
+
+    def mono_beam_just_came_back_but_after_sleep_plan(self):
+        if self.previous is not None:
+            yield from bps.mv(
+                monochromator.feedback.on, self.previous,
+                timeout=self.timeout,
+            )
+            self.previous = None
 
 
 if aps.inUserOperations:
@@ -34,8 +62,12 @@ if aps.inUserOperations:
     #   - 9ID undulator
     #   - white beam shutter
     # Signal provided by 9idcLAX:userCalc9 PV (swait record)
+    fb = FeedbackHandlingDuringSuspension()
     suspender_white_beam_ready = bluesky.suspenders.SuspendBoolLow(
-        white_beam_ready.available, sleep=100
+        white_beam_ready.available,
+        pre_plan=fb.mono_beam_lost_plan,
+        post_plan=fb.mono_beam_just_came_back_but_after_sleep_plan,
+        sleep=100,
     )
     RE.install_suspender(suspender_white_beam_ready)
 
