@@ -66,8 +66,8 @@ if aps.inUserOperations:
     suspender_white_beam_ready = bluesky.suspenders.SuspendBoolLow(
         white_beam_ready.available,
         pre_plan=fb.mono_beam_lost_plan,
+        sleep=100,  # RE sleeps _before_ calling post_plan
         post_plan=fb.mono_beam_just_came_back_but_after_sleep_plan,
-        sleep=100,
     )
     RE.install_suspender(suspender_white_beam_ready)
 
