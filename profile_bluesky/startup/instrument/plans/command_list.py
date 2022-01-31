@@ -17,6 +17,7 @@ __all__ = """
     postCommandsListfile2WWW
     run_command_file
     run_python_file
+    run_set_command
     summarize_command_file
     sync_order_numbers
 """.split()
@@ -29,6 +30,7 @@ from apstools.utils import ExcelDatabaseFileGeneric
 from apstools.utils import rss_mem
 from bluesky import plan_stubs as bps
 from IPython import get_ipython
+from ophyd import Signal
 from usaxs_support.nexus import reset_manager
 from usaxs_support.surveillance import instrument_archive
 import datetime
@@ -36,15 +38,19 @@ import os
 import pyRestTable
 import sys
 
+from ..devices import a_shutter_autoopen
 from ..devices import constants
 from ..devices import email_notices
-from ..devices import measure_background
 from ..devices import saxs_det, waxs_det
 from ..devices import terms
 from ..devices import ti_filter_shutter
-from ..devices import a_shutter_autoopen
-from ..devices import upd_controls, I0_controls, I00_controls, trd_controls
 from ..devices import user_data
+from ..devices.amplifiers import I0_controls
+from ..devices.amplifiers import I00_controls
+from ..devices.amplifiers import measure_background
+from ..devices.amplifiers import trd_controls
+from ..devices.amplifiers import upd_controls
+from ..devices.stages import s_stage
 from ..utils.quoted_line import split_quoted_line
 from .axis_tuning import instrument_default_tune_ranges
 from .axis_tuning import update_EPICS_tuning_widths
@@ -57,7 +63,6 @@ from .mode_changes import mode_USAXS
 from .mode_changes import mode_WAXS
 from .requested_stop import RequestAbort
 from .sample_rotator_plans import PI_Off, PI_onF, PI_onR
-from ..devices.stages import s_stage
 
 
 MAXIMUM_ATTEMPTS = 1  # (>=1): try command list item no more than this many attempts
@@ -117,7 +122,7 @@ def before_command_list(md=None, commands=None):
         terms.WAXS.collecting, 0,
         a_shutter_autoopen, 1,
     )
-  
+
     if constants["MEASURE_DARK_CURRENTS"]:
         yield from measure_background(
             [upd_controls, I0_controls, I00_controls, trd_controls],
@@ -510,6 +515,9 @@ def execute_command_list(filename, commands, md=None):
                 filename = args[0]
                 yield from run_python_file(filename, md={})
 
+            elif action in ("set",):
+                yield from run_set_command(*args)
+
             elif action in simple_actions:
                 yield from simple_actions[action](md=_md)
 
@@ -608,3 +616,121 @@ def run_python_file(filename, md=None):
     logger.error("Could not find file '%s'", filename)
     if not filename.endswith(".py"):
         logger.warning("Did you forget the '.py' suffix on '%s'?", filename)
+
+
+def run_set_command(*args):
+    """
+    Change a general parameter from a command file.
+
+    The general parameter to be set MUST be an attribute of ``terms``.
+    The ``instrument.devices.general_terms.terms`` are (mostly)
+    EPICS PVs which contain configuration values to be used when they
+    are called.  None of these are expected to cause any motion,
+    so they should need to be waited upon for completion.
+    Uses::
+
+        yield from bps.abs_set(term, value, timeout=0.1, wait=False)
+
+    syntax:  ``SET terms.component value``
+
+    Does not raise an exception.  Instead, logs as _error_ and
+    skips further handling of this command.
+
+    NOTE: If you intend to use this signal immediately (as with a 
+    ``.get()`` operation), you may need to sleep for a short
+    interval (perhaps ~ 0.1s) to allow EPICS to process this PV
+    and post a CA update.
+
+    This command (from ``apstools.utils``) will list all the terms,
+    PVs (if related), and current values::
+
+      listdevice(terms, cname=True, dname=False, show_pv=True, use_datetime=False)
+
+    New with issue #543.
+    """
+    yield from bps.null()
+
+    # print(f"{args = }")
+    if len(args) != 2:
+        logger.error(
+            "syntax:  SET terms.component value"
+            f", received {args}.  Skipping this command ..."
+        )
+        return
+
+    term = args[0]
+    value = args[1]
+    # print(f"{term = }")
+    # print(f"{value = }")
+
+    if not term.startswith("terms."):
+        logger.error(
+            (
+                "First argument must start with 'terms.'"
+                ", received '%s'.  Skipping this command ..."
+            ) % term
+        )
+        return
+    # logger.info("type(value) = %s", type(value))
+
+    # get the python object
+    pyobj = terms  # dig down to the term
+    full_dotted_name = terms.name  # re-construct full dotted name
+    for cn in term.split(".")[1:]:
+        # print(f"{cn = }")
+        if hasattr(pyobj, cn):
+            pyobj = getattr(pyobj, cn)
+            full_dotted_name += f".{cn}"
+            # print(f"{pyobj = }")
+        else:
+            logger.error(
+                (
+                    "'%s.%s' does not exist.  Skipping this command ..."
+                ) % (full_dotted_name, cn)
+            )
+            return
+    if isinstance(pyobj, Signal):
+        old_value = pyobj.get()
+    # elif hasattr(pyobj, "position"):
+    #     old_value = pyobj.position
+    else:
+        logger.error(
+            (
+                "Cannot set '%s', it is not a Signal"
+                # " or positioner"
+                ".  Skipping this command ..."
+            ) % full_dotted_name
+        )
+        return
+    # print(f"{type(pyobj.get()) = }")
+
+    try:
+        if isinstance(old_value, int):
+            # print("int")
+            value = int(value)
+        elif isinstance(old_value, float):
+            # print("float")
+            value = float(value)
+        elif isinstance(old_value, str):
+            # print("str")
+            value = str(value)
+        else:
+            logger.error(
+                (
+                    "Cannot set '%s', support for data type '%s'"
+                    " is not implemented yet.  Skipping this command ..."
+                ) % (full_dotted_name, type(old_value).__name__)
+            )
+            return
+    except Exception as exc:
+            logger.error(
+                (
+                    "Cannot set '%s' to '%s'"
+                    " due to exception (%s)."
+                    "  Skipping this command ..."
+                ) % (term, args[1], exc)
+            )
+            return
+
+    # print(f"{[full_dotted_name, value] = }")
+    yield from bps.abs_set(pyobj, value, timeout=0.1, wait=False)
