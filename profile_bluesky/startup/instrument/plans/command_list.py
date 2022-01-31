@@ -41,13 +41,15 @@ import sys
 from ..devices import a_shutter_autoopen
 from ..devices import constants
 from ..devices import email_notices
-from ..devices import measure_background
 from ..devices import saxs_det, waxs_det
 from ..devices import terms
-from ..devices import terms
 from ..devices import ti_filter_shutter
-from ..devices import upd_controls, I0_controls, I00_controls, trd_controls
 from ..devices import user_data
+from ..devices.amplifiers import I0_controls
+from ..devices.amplifiers import I00_controls
+from ..devices.amplifiers import measure_background
+from ..devices.amplifiers import trd_controls
+from ..devices.amplifiers import upd_controls
 from ..devices.stages import s_stage
 from ..utils.quoted_line import split_quoted_line
 from .axis_tuning import instrument_default_tune_ranges
@@ -620,7 +622,12 @@ def run_set_command(*args):
     """
     Change a general parameter from a command file.
 
-    The general parameter to be set MUST be an attribute of ``terms``.  Uses::
+    The general parameter to be set MUST be an attribute of ``terms``.
+    The ``instrument.devices.general_terms.terms`` are (mostly)
+    EPICS PVs which contain configuration values to be used when they
+    are called.  None of these are expected to cause any motion,
+    so they should need to be waited upon for completion.
+    Uses::
 
         yield from bps.abs_set(term, value, timeout=0.1, wait=False)
 
@@ -628,6 +635,13 @@ def run_set_command(*args):
 
     Does not raise an exception.  Instead, logs as _error_ and
     skips further handling of this command.
+
+    NOTE: If you intend to use this signal immediately (as with a 
+    ``.get()`` operation), you may need to sleep for a short
+    interval (perhaps ~ 0.1s) to allow EPICS to process this PV
+    and post a CA update.
+
+    New with issue #543.
     """
     yield from bps.null()
 
@@ -655,7 +669,7 @@ def run_set_command(*args):
     # logger.info("type(value) = %s", type(value))
 
     # get the python object
-    pyobj = terms
+    pyobj = terms  # dig down to the term
     full_dotted_name = terms.name  # re-construct full dotted name
     for cn in term.split(".")[1:]:
         # print(f"{cn = }")
@@ -670,17 +684,21 @@ def run_set_command(*args):
                 ) % (full_dotted_name, cn)
             )
             return
-    if not isinstance(pyobj, Signal):
+    if isinstance(pyobj, Signal):
+        old_value = pyobj.get()
+    # elif hasattr(pyobj, "position"):
+    #     old_value = pyobj.position
+    else:
         logger.error(
             (
-                "Cannot set '%s', it is not a Signal."
-                "  Skipping this command ..."
+                "Cannot set '%s', it is not a Signal"
+                # " or positioner"
+                ".  Skipping this command ..."
             ) % full_dotted_name
         )
         return
-
-    old_value = pyobj.get()
     # print(f"{type(pyobj.get()) = }")
+
     try:
         if isinstance(old_value, int):
             # print("int")
