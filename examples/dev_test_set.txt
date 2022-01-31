@@ -1,0 +1,17 @@
+# test the `set terms.thing value` command
+
+# valid syntax, no such attribute
+set terms.thing value
+
+# too many arguments
+set anything value1 value2
+
+# does not set an attribute of `terms`
+set anything value1
+
+# bad value
+SET terms.SAXS.usaxs_v_size chuck
+
+# example from GH issue of valid commands
+Set terms.SAXS.usaxs_h_size 0.2
+SET terms.SAXS.usaxs_v_size 0.802

@@ -39,3 +39,6 @@ mViewer.log
 
 # Linux core dumps
 core
+
+# local developer code
+dev_*.py
