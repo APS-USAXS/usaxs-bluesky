@@ -641,6 +641,11 @@ def run_set_command(*args):
     interval (perhaps ~ 0.1s) to allow EPICS to process this PV
     and post a CA update.
 
+    This command (from ``apstools.utils``) will list all the terms,
+    PVs (if related), and current values::
+
+      listdevice(terms, cname=True, dname=False, show_pv=True, use_datetime=False)
+
     New with issue #543.
     """
     yield from bps.null()
