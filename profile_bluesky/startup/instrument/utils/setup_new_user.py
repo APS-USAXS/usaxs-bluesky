@@ -238,10 +238,10 @@ def newUser(user, scan_id=1, year=None, month=None, day=None):
         f"{month:02d}_{day:02d}_{cleanupText(user)}"
     )
 
-    if not path.exists(path):
+    if not path.exists():
         logger.info("Creating user directory: %s", path)
         path.mkdir(parents=True)
-    logger.info("Current working directory is still %s", cwd)
+    logger.info("Current working directory: %s", cwd)
     user_data.user_dir.put(str(path))    # set in the PV
 
     _setSpecFileName(str(path), scan_id=scan_id)    # SPEC file name
