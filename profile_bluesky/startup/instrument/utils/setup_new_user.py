@@ -22,12 +22,12 @@ from apstools.utils import cleanupText
 from apsbss import apsbss
 import datetime
 import os
+import pathlib
 import pyRestTable
 
 
 APSBSS_SECTOR = "09"
 APSBSS_BEAMLINE = "9-ID-B,C"
-DATA_DIR_BASE = os.path.join("/", "share1", "USAXS_data")
 
 
 def _pick_esaf(user, now, cycle):
@@ -226,26 +226,28 @@ def newUser(user, scan_id=1, year=None, month=None, day=None):
     user_data.user_name.put(user)    # set in the PV
 
     dt = datetime.datetime.now()
-    year = year or dt.year
+    year = year or dt.year  # lgtm [py/unused-local-variable]
     month = month or dt.month
     day = day or dt.day
 
-    path = os.path.join(
-        DATA_DIR_BASE,
-        f"{year:04d}-{month:02d}",
-        f"{month:02d}_{day:02d}_{cleanupText(user)}",
-        )
+    cwd = pathlib.Path.cwd()
+    # DATA_DIR_BASE = pathlib.Path("/") / "share1" / "USAXS_data"
+    path = (
+        cwd /   # instead of DATA_DIR_BASE
+        # f"{year:04d}-{month:02d}" /
+        f"{month:02d}_{day:02d}_{cleanupText(user)}"
+    )
 
-    if not os.path.exists(path):
+    if not path.exists():
         logger.info("Creating user directory: %s", path)
-        os.makedirs(path)
-    logger.info("Change working directory is still %s", os.getcwd())
-    user_data.user_dir.put(path)    # set in the PV
+        path.mkdir(parents=True)
+    logger.info("Current working directory: %s", cwd)
+    user_data.user_dir.put(str(path))    # set in the PV
 
-    _setSpecFileName(path, scan_id=scan_id)    # SPEC file name
+    _setSpecFileName(str(path), scan_id=scan_id)    # SPEC file name
     matchUserInApsbss(user)     # update ESAF & Proposal, if available
 
-    return os.path.abspath(path)
+    return str(path.absolute())
 
 
 def get_data_dir():
@@ -254,10 +256,10 @@ def get_data_dir():
 
     The directory MUST exist or raises a FileNotFoundError exception.
     """
-    data_path = user_data.user_dir.get()
-    if not os.path.exists(data_path):
+    data_path = pathlib.Path(user_data.user_dir.get())
+    if not data_path.exists():
         raise FileNotFoundError(f"Cannot find user directory: {data_path}")
-    return data_path
+    return str(data_path)
 
 
 def techniqueSubdirectory(technique):
