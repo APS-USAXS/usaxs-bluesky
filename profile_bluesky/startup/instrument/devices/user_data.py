@@ -21,8 +21,6 @@ from ophyd import Component, Device, EpicsSignal
 from ..framework import sd
 
 
-
-
 class EpicsSampleNameDevice(EpicsSignal):
     """
     Enable the user to supply a function that modifies
@@ -161,11 +159,6 @@ class CustomEpicsBssDevice(EpicsBssDevice):
                     return user.last_name.get()
 
 
-bss_user_info = ApsBssUserInfoDevice(
-    "9id_bss:", name="bss_user_info")
-# sd.baseline.append(bss_user_info)
-
-# eventually, apsbss will replace bss_user_info
 apsbss = CustomEpicsBssDevice("9idc:bss:", name="apsbss")
 sd.baseline.append(apsbss.proposal.raw)
 sd.baseline.append(apsbss.esaf.raw)
