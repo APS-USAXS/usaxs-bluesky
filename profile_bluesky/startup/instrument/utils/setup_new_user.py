@@ -256,10 +256,10 @@ def get_data_dir():
 
     The directory MUST exist or raises a FileNotFoundError exception.
     """
-    data_path = user_data.user_dir.get()
-    if not os.path.exists(data_path):
+    data_path = pathlib.Path(user_data.user_dir.get())
+    if not data_path.exists():
         raise FileNotFoundError(f"Cannot find user directory: {data_path}")
-    return data_path
+    return str(data_path)
 
 
 def techniqueSubdirectory(technique):
