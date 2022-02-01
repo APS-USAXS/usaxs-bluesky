@@ -315,7 +315,7 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
 
     # offset the calc from exact zero so can plot log(|Q|)
     # q_offset = terms.USAXS.start_offset.get()
-    # angle_offset = q2angle(q_offset, monochromator.dcm.wavelength.get())
+    # angle_offset = q2angle(q_offset, monochromator.dcm.wavelength.position)
     # ar0_calc_offset = terms.USAXS.ar_val_center.get() + angle_offset
 
     yield from bps.mv(
@@ -396,8 +396,14 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     logger.info("USAXSscan HDF5 data file: %s", _md["hdf5_file"])
     logger.info("*"*10)  # this line gets clobbered on the console
 
-    startAngle = terms.USAXS.ar_val_center.get()- q2angle(terms.USAXS.start_offset.get(),monochromator.dcm.wavelength.get())
-    endAngle = terms.USAXS.ar_val_center.get()-q2angle(terms.USAXS.finish.get(),monochromator.dcm.wavelength.get())
+    startAngle = (
+        terms.USAXS.ar_val_center.get()
+        - q2angle(terms.USAXS.start_offset.get(), monochromator.dcm.wavelength.position)
+    )
+    endAngle = (
+        terms.USAXS.ar_val_center.get()
+        - q2angle(terms.USAXS.finish.get(), monochromator.dcm.wavelength.position)
+    )
     bec.disable_plots()
 
     yield from record_sample_image_on_demand("usaxs", scan_title_clean, _md)
@@ -538,7 +544,7 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
 
     # offset the calc from exact zero so can plot log(|Q|)
     # q_offset = terms.USAXS.start_offset.get()
-    # angle_offset = q2angle(q_offset, monochromator.dcm.wavelength.get())
+    # angle_offset = q2angle(q_offset, monochromator.dcm.wavelength.position)
     # ar0_calc_offset = terms.USAXS.ar_val_center.get() + angle_offset
 
     yield from bps.mv(
