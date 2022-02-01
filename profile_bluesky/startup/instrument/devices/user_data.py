@@ -3,11 +3,10 @@
 EPICS data about the user
 """
 
-__all__ = [
-    'apsbss',
-    'bss_user_info',
-    'user_data',
-    ]
+__all__ = """
+    apsbss
+    user_data
+    """.split()
 
 from ..session_logs import logger
 logger.info(__file__)
