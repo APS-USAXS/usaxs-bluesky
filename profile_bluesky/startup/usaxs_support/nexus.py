@@ -35,14 +35,13 @@ logger = logging.getLogger(os.path.split(__file__)[-1])
 logger.setLevel(logging.DEBUG)
 # logger.addHandler(logging.NullHandler())
 
+COMMON_AD_CONFIG_DIR = "/share1/AreaDetectorConfig/FlyScan_config/"
 path = os.path.dirname(__file__)
-XML_CONFIGURATION_FILE = os.path.join(path, 'saveFlyData.xml')
+XML_CONFIGURATION_FILE = os.path.join(COMMON_AD_CONFIG_DIR, 'saveFlyData.xml')
 XSD_SCHEMA_FILE = os.path.join(path, 'saveFlyData.xsd')
 TRIGGER_POLL_INTERVAL_s = 0.1
 
 manager = None # singleton instance of NeXus_Structure
-
-    
 
 
 class EpicsSignalDesc(EpicsSignal):
@@ -168,7 +167,7 @@ class NeXus_Structure(object):
         arr = [pv.ophyd_signal.connected
                for pv in self.pv_registry.values()]
         return not (False in arr)
-    
+
     @property
     def unconnected_signals(self):
         """
@@ -386,7 +385,7 @@ def _developer():
         if verdict or t > timeout:
             break       # seems to take about 60-70 ms with current XML file
         time.sleep(0.005)
-    
+
     workstation = socket.gethostname()
     if workstation.find("usaxscontrol") >= 0:
         assert mgr.connected

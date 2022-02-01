@@ -20,9 +20,11 @@ import time
 import uuid
 
 from usaxs_support.saveFlyData import SaveFlyScan
+from usaxs_support.saveFlyData import XML_CONFIGURATION_FILE
+
 # NOTES for testing SaveFlyScan() command
 """
-sfs = SaveFlyScan("/tmp/sfs.h5", config_file="usaxs_support/saveFlyData.xml")
+sfs = SaveFlyScan("/tmp/sfs.h5", config_file=XML_CONFIGURATION_FILE)
 sfs.preliminaryWriteFile()
 sfs.saveFile()
 """
@@ -56,7 +58,7 @@ class UsaxsFlyScanDevice(Device):
         self.ay0 = None
         self.dy0 = None
         self.saveFlyData = None
-        self.saveFlyData_config = "usaxs_support/saveFlyData.xml"
+        self.saveFlyData_config = XML_CONFIGURATION_FILE
         self.saveFlyData_HDF5_dir ="/tmp"
         self.fallback_dir = FALLBACK_DIR
         self.saveFlyData_HDF5_file ="sfs.h5"
@@ -228,8 +230,8 @@ class UsaxsFlyScanDevice(Device):
             except Exception as exc:
                 # do not fail the scan just because of updating program state
                 logger.warning(
-                    "Non-fatal error while %s\n%s\nPlan continues", 
-                    msg, 
+                    "Non-fatal error while %s\n%s\nPlan continues",
+                    msg,
                     exc
                 )
                 # FIXME: hack to avoid `Another set() call is still in progress`
@@ -259,7 +261,7 @@ class UsaxsFlyScanDevice(Device):
 
 usaxs_flyscan = UsaxsFlyScanDevice(name="usaxs_flyscan")
 # production locations
-usaxs_flyscan.saveFlyData_config = "/share1/AreaDetectorConfig/FlyScan_config/saveFlyData.xml"
+usaxs_flyscan.saveFlyData_config = XML_CONFIGURATION_FILE
 # Flyscan() will override these and set them in the way the isntrument prefers.
 usaxs_flyscan.saveFlyData_HDF5_dir ="/share1/USAXS_data/test"   # developer
 usaxs_flyscan.saveFlyData_HDF5_file ="sfs.h5"

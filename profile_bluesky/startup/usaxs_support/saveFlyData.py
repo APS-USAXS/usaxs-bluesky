@@ -32,8 +32,9 @@ except ImportError:
     from . import nexus # when imported in a package
 
 
+COMMON_AD_CONFIG_DIR = "/share1/AreaDetectorConfig/FlyScan_config/"
 path = os.path.dirname(__file__)
-XML_CONFIGURATION_FILE = os.path.join(path, 'saveFlyData.xml')
+XML_CONFIGURATION_FILE = os.path.join(COMMON_AD_CONFIG_DIR, 'saveFlyData.xml')
 XSD_SCHEMA_FILE = os.path.join(path, 'saveFlyData.xsd')
 
 
