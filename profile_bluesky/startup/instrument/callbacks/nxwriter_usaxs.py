@@ -178,6 +178,7 @@ class OurCustomNXWriterBase(NXWriterAPS):
         text = text or ""
         return text.encode("utf8")
 
+
 class NXWriterFlyScan(OurCustomNXWriterBase):
 
     supported_plans = ("Flyscan", )
