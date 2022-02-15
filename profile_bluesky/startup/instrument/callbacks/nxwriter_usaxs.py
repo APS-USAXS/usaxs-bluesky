@@ -74,12 +74,15 @@ class OurCustomNXWriterBase(NXWriterAPS):
         nxentry["sample/name"] = self.get_sample_title()
         self.root.attrs["creator_version"] = apstools.__version__
 
-    def write_monochromator(self, parent):  # override NXWriterAPS
+    def write_monochromator(  # override NXWriterAPS
+            self,
+            parent,
+            pre="monochromator_dcm",
+            keys="wavelength energy theta".split()  # <- removed: y_offset mode
+            ):
         """
         group: /entry/instrument/monochromator:NXmonochromator
         """
-        pre = "monochromator_dcm"
-        keys = "wavelength energy theta".split()  # <- removed: y_offset mode
 
         try:
             links = {
