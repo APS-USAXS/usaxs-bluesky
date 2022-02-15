@@ -74,6 +74,37 @@ class OurCustomNXWriterBase(NXWriterAPS):
         nxentry["sample/name"] = self.get_sample_title()
         self.root.attrs["creator_version"] = apstools.__version__
 
+    def write_monochromator(self, parent):  # override NXWriterAPS
+        """
+        group: /entry/instrument/monochromator:NXmonochromator
+        """
+        pre = "monochromator_dcm"
+        keys = "wavelength energy theta".split()  # <- removed: y_offset mode
+
+        try:
+            links = {
+                key: self.get_stream_link(f"{pre}_{key}") for key in keys
+            }
+        except KeyError as exc:
+            logger.warning(
+                "%s -- not creating monochromator group", str(exc)
+            )
+            return
+
+        pre = "monochromator"
+        key = "feedback_on"
+        try:
+            links[key] = self.get_stream_link(f"{pre}_{key}")
+        except KeyError as exc:
+            logger.warning("%s -- feedback signal not found", str(exc))
+
+        nxmonochromator = self.create_NX_group(
+            parent, "monochromator:NXmonochromator"
+        )
+        for k, v in links.items():
+            nxmonochromator[k] = v
+        return nxmonochromator
+
     def get_sample_title(self):
         """
         return the title for this sample
