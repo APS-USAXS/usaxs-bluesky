@@ -39,19 +39,19 @@ RE.md["login_id"] = USERNAME + "@" + HOSTNAME
 
 # useful diagnostic to record with all data
 RE.md["versions"] = dict(
-    bluesky=bluesky.__version__,
-    ophyd=ophyd.__version__,
-    databroker=databroker.__version__,
     apstools=apstools.__version__,
     area_detector_handlers=area_detector_handlers.__version__,
-    epics=epics.__version__,
+    bluesky=bluesky.__version__,
+    databroker=databroker.__version__,
     epics_ca=epics.__version__,
+    epics=epics.__version__,
     h5py=h5py.__version__,
-    numpy=numpy.__version__,
     matplotlib=matplotlib.__version__,
-    spec2nexus=spec2nexus.__version__,
-    pyRestTable=pyRestTable.__version__,
+    numpy=numpy.__version__,
+    ophyd=ophyd.__version__,
     pymongo=pymongo.__version__,
+    pyRestTable=pyRestTable.__version__,
+    spec2nexus=spec2nexus.__version__,
 )
 
 # per https://github.com/APS-USAXS/ipython-usaxs/issues/553
