@@ -23,7 +23,8 @@ INTERNAL
 import logging
 import os
 # ensure we have a location for the libca (& libCom) library
-os.environ["PYEPICS_LIBCA"] = "/APSshare/epics/base-7.0.3/lib/linux-x86_64/libca.so"
+# os.environ["PYEPICS_LIBCA"] = "/APSshare/epics/base-7.0.3/lib/linux-x86_64/libca.so"
+os.environ["PYEPICS_LIBCA"] = "/local/epics/base-7.0.6.1/lib/linux-x86_64/libca.so"
 
 from lxml import etree as lxml_etree
 from ophyd import Component, EpicsSignal
