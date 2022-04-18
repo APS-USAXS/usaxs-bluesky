@@ -2,7 +2,7 @@
 """
 support USAXS area detectors
 
-replace BlueSky file name scheme when used with area detector
+replace Bluesky file name scheme when used with area detector
 
 file systems on some area detectors need more work
 
