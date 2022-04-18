@@ -458,6 +458,7 @@ def execute_command_list(filename, commands, md=None):
     for command in commands:
         action, args, i, raw_command = command
         logger.info("file line %d: %s", i, raw_command)
+        yield from bps.checkpoint()
 
         _md = {}
         _md["full_filename"] = full_filename
