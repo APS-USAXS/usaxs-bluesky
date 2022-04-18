@@ -818,11 +818,14 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     old_det_stage_sigs = OrderedDict()
     for k, v in saxs_det.hdf1.stage_sigs.items():
         old_det_stage_sigs[k] = v
-    if saxs_det.hdf1.stage_sigs.get("capture") is not None:
-        del saxs_det.hdf1.stage_sigs["capture"]
     saxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
     saxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
     saxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
+    # "capture" MUST ALWAYS come last
+    value = saxs_det.hdf1.stage_sigs.get("capture")
+    if value is not None:  # so, move to the end
+        del saxs_det.hdf1.stage_sigs["capture"]
+        saxs_det.hdf1.stage_sigs["capture"] = value
 
     yield from bps.sleep(0.2)
     yield from autoscale_amplifiers([I0_controls])
@@ -994,11 +997,14 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     old_det_stage_sigs = OrderedDict()
     for k, v in waxs_det.hdf1.stage_sigs.items():
         old_det_stage_sigs[k] = v
-    if waxs_det.hdf1.stage_sigs.get("capture") is not None:
-        del waxs_det.hdf1.stage_sigs["capture"]
     waxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
     waxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
     waxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
+    # "capture" MUST ALWAYS come last
+    value = waxs_det.hdf1.stage_sigs.get("capture")
+    if value is not None:  # so, move to the end
+        del waxs_det.hdf1.stage_sigs["capture"]
+        waxs_det.hdf1.stage_sigs["capture"] = value
 
     yield from bps.sleep(0.2)
     yield from autoscale_amplifiers([I0_controls, trd_controls])
