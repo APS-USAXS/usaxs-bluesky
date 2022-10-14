@@ -28,11 +28,11 @@ class UsaxsDetectorStageDevice(MotorBundle):
     """USAXS detector stage"""
     x = Component(
         UsaxsMotorTunable,
-        '9idcLAX:m58:c2:m3',
+        '9idcAERO:m1',
         labels=("detector", "tunable",))
     y = Component(
         UsaxsMotorTunable,
-        '9idcLAX:aero:c2:m1',
+        '9idcAERO:m2',
         labels=("detector", "tunable",))
 
 
