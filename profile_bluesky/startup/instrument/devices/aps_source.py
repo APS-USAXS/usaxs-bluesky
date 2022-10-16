@@ -31,5 +31,5 @@ aps = ApsSpecialMode(name="aps")
 sd.baseline.append(aps)
 
 undulator = apstools.devices.ApsUndulatorDual(
-    "ID09", name="undulator")
+    "ID20", name="undulator")
 sd.baseline.append(undulator)

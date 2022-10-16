@@ -56,10 +56,10 @@ class DCM_Feedback(Device):
 
 
 class MyMonochromator(Device):
-    dcm = Component(KohzuSeqCtl_Monochromator, "9ida:")
+    #dcm = Component(KohzuSeqCtl_Monochromator, "9ida:")
     feedback = Component(DCM_Feedback, "9idcLAX:fbe:omega")
-    temperature = Component(EpicsSignal, "9ida:DP41:s1:temp")
-    cryo_level = Component(EpicsSignal, "9idCRYO:MainLevel:val")
+    #temperature = Component(EpicsSignal, "9ida:DP41:s1:temp")
+    #cryo_level = Component(EpicsSignal, "9idCRYO:MainLevel:val")
 
 
 monochromator = MyMonochromator(name="monochromator")

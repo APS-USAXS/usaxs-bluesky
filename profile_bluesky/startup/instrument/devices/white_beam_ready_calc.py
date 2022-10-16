@@ -16,9 +16,9 @@ from ophyd import EpicsSignal
 from ophyd import Signal
 
 CALC_PV = "9idcLAX:userCalc9"
-SHUTTER_PV = "PA:09ID:STA_A_FES_OPEN_PL"
+SHUTTER_PV = "PA:20ID:STA_A_FES_OPEN_PL"
 APS_CURRENT_PV = "S:SRcurrentAI"
-UNDULATOR_ENERGY_PV = "ID09ds:Energy"
+UNDULATOR_ENERGY_PV = "ID20ds:Energy"
 
 
 class WhiteBeamReadyCalc(Device):

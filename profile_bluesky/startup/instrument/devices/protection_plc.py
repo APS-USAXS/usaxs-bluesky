@@ -144,4 +144,4 @@ suspend_plc_protect = PlcProtectSuspendWhenChanged(
     plc_protect.operations_status,
     expected_value=1)
 # this will suspend whenever PLC Y0 = 0 ("not good") -- we want that!
-RE.install_suspender(suspend_plc_protect)
+# RE.install_suspender(suspend_plc_protect)

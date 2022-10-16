@@ -90,7 +90,7 @@ class GeneralUsaxsParametersBlackfly(Device):
 class GeneralUsaxsParametersDiode(Device):
     "part of GeneralParameters Device"
     dx = Component(EpicsSignal, "Diode_dx")
-    dy = Component(EpicsSignal, "DY0")
+    dy = Component(EpicsSignal, "Diode_dy")
     upd_size = Component(EpicsSignal, "UPDsize")
 
 
@@ -117,8 +117,8 @@ class Parameters_transmission(Device):
 
 class Parameters_USAXS(Device):
     """internal values shared with EPICS"""
-    AY0 = Component(EpicsSignal,                      "9idcLAX:USAXS:AY0")
-    DY0 = Component(EpicsSignal,                      "9idcLAX:USAXS:DY0")
+    AX0 = Component(EpicsSignal,                      "9idcLAX:SAXS:ax_in")
+    DX0 = Component(EpicsSignal,                      "9idcLAX:SAXS:dx_in")
     ASRP0 = Component(EpicsSignal,                    "9idcLAX:USAXS:ASRcenter")
     SAD = Component(EpicsSignal,                      "9idcLAX:USAXS:SAD")
     SDD = Component(EpicsSignal,                      "9idcLAX:USAXS:SDD")

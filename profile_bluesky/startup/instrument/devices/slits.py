@@ -27,10 +27,10 @@ class UsaxsSlitDevice(MotorBundle):
     * center of slit: (x, y)
     * aperture: (h_size, v_size)
     """
-    h_size = Component(UsaxsMotor, '9idcLAX:m58:c2:m8', labels=("uslit",))
-    x      = Component(UsaxsMotor, '9idcLAX:m58:c2:m6', labels=("uslit",))
-    v_size = Component(UsaxsMotor, '9idcLAX:m58:c2:m7', labels=("uslit",))
-    y      = Component(UsaxsMotor, '9idcLAX:m58:c2:m5', labels=("uslit",))
+    h_size = Component(UsaxsMotor, '9idcLAX:m58:c1:m8', labels=("uslit",))
+    x      = Component(UsaxsMotor, '9idcLAX:m58:c1:m6', labels=("uslit",))
+    v_size = Component(UsaxsMotor, '9idcLAX:m58:c1:m7', labels=("uslit",))
+    y      = Component(UsaxsMotor, '9idcLAX:m58:c1:m5', labels=("uslit",))
 
     def set_size(self, *args, h=None, v=None):
         """move the slits to the specified size"""
@@ -52,11 +52,11 @@ class GSlitDevice(MotorBundle):
 
     * aperture: (h_size, v_size)
     """
-    bot  = Component(GuardSlitMotor, '9idcLAX:mxv:c0:m6', labels=("gslit",))
-    inb  = Component(GuardSlitMotor, '9idcLAX:mxv:c0:m4', labels=("gslit",))
-    outb = Component(GuardSlitMotor, '9idcLAX:mxv:c0:m3', labels=("gslit",))
-    top  = Component(GuardSlitMotor, '9idcLAX:mxv:c0:m5', labels=("gslit",))
-    x    = Component(UsaxsMotor, '9idcLAX:m58:c1:m5', labels=("gslit",))
+    bot  = Component(GuardSlitMotor, '9idcLAX:m58:c1:m4', labels=("gslit",))
+    inb  = Component(GuardSlitMotor, '9idcLAX:m58:c1:m2', labels=("gslit",))
+    outb = Component(GuardSlitMotor, '9idcLAX:m58:c1:m1', labels=("gslit",))
+    top  = Component(GuardSlitMotor, '9idcLAX:m58:c1:m3', labels=("gslit",))
+    x    = Component(UsaxsMotor, '9idcLAX:m58:c0:m7', labels=("gslit",))
     y    = Component(UsaxsMotor, '9idcLAX:m58:c0:m6', labels=("gslit",))
 
     h_size = Component(EpicsSignal, '9idcLAX:GSlit1H:size')

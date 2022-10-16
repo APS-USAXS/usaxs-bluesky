@@ -84,8 +84,8 @@ class UsaxsFlyScanDevice(Device):
 
             values = [f"{t:.2f}",]
             values.append(f"{a_stage.r.position:.7f}")
-            values.append(f"{a_stage.y.position:.5f}")
-            values.append(f"{d_stage.y.position:.5f}")
+            values.append(f"{a_stage.x.position:.5f}")
+            values.append(f"{d_stage.x.position:.5f}")
             missing = "-missing-"
             if channel is None:
                 values.append(missing)
@@ -172,8 +172,8 @@ class UsaxsFlyScanDevice(Device):
 
         # remember our starting conditions
         self.ar0 = a_stage.r.position
-        self.ay0 = a_stage.y.position
-        self.dy0 = d_stage.y.position
+        self.ax0 = a_stage.x.position
+        self.dx0 = d_stage.x.position
 
         _md = OrderedDict()
         _md.update(md or {})
@@ -245,8 +245,8 @@ class UsaxsFlyScanDevice(Device):
 
         yield from bps.mv(
             a_stage.r.user_setpoint, self.ar0,
-            a_stage.y.user_setpoint, self.ay0,
-            d_stage.y.user_setpoint, self.dy0,
+            a_stage.x.user_setpoint, self.ax0,
+            d_stage.x.user_setpoint, self.dx0,
             upd_controls.auto.mode,  AutorangeSettings.auto_background,
             ti_filter_shutter, "close",
             )

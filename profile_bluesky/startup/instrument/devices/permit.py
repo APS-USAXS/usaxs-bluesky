@@ -21,7 +21,8 @@ def operations_in_9idc():
     """
     returns True if allowed to use X-ray beam in 9-ID-C station
     """
-    return diagnostics.PSS.c_station_enabled
+    #return diagnostics.PSS.b_station_enabled
+    return True 
 
 
 """

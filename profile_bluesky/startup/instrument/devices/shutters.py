@@ -29,13 +29,15 @@ from .permit import operations_in_9idc
 
 if aps.inUserOperations and operations_in_9idc():
     FE_shutter = ApsPssShutterWithStatus(
-        "9ida:rShtrA:",
-        "PA:09ID:STA_A_FES_OPEN_PL.VAL",
+        #20id:shutter0_opn and 20id:shutter0_cls
+        "9ida:rShtrA:",  # does not exist, see above PVs 
+        "PA:20ID:STA_A_FES_OPEN_PL.VAL",
         name="FE_shutter")
 
     mono_shutter = ApsPssShutterWithStatus(
-        "9ida:rShtrB:",
-        "PA:09ID:STA_B_SBS_OPEN_PL.VAL",
+        #20id:shutter1_opn and 20id:shutter1_cls
+        "9ida:rShtrB:", # does not exist, see above PVs
+        "PA:20ID:STA_B_SBS_OPEN_PL.VAL",
         name="mono_shutter")
 
     usaxs_shutter = EpicsOnOffShutter(
@@ -43,7 +45,7 @@ if aps.inUserOperations and operations_in_9idc():
         name="usaxs_shutter")
 
     a_shutter_autoopen = EpicsSignal(
-        "9ida:AShtr:Enable",
+        "9idcLAX:AShtr:Enable",
         name="a_shutter_autoopen")
 
 else:
@@ -51,7 +53,7 @@ else:
     if operations_in_9idc():
         logger.warning("Session started when APS not operating.")
     else:
-        logger.warning("Session started when 9ID-C is not operating.")
+        logger.warning("Session started when 20ID-C is not operating.")
     logger.warning("Using simulators for all shutters.")
     logger.warning("!"*30)
     FE_shutter = SimulatedApsPssShutterWithStatus(name="FE_shutter")
