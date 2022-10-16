@@ -107,7 +107,7 @@ class Parameters_transmission(Device):
     measure = Component(EpicsSignal, "9idcLAX:USAXS:TR_MeasurePinTrans")
 
     # Ay to hit pin diode
-    ay = Component(EpicsSignal, "9idcLAX:USAXS:TR_AyPosition")
+    ax = Component(EpicsSignal, "9idcLAX:USAXS:TR_AxPosition")
     count_time = Component(EpicsSignal, "9idcLAX:USAXS:TR_MeasurementTime")
     diode_counts = Component(EpicsSignal, "9idcLAX:USAXS:TR_pinCounts")
     diode_gain = Component(EpicsSignal, "9idcLAX:USAXS:TR_pinGain") # I00 amplifier
@@ -174,13 +174,19 @@ class Parameters_SAXS(Device):
     z_out = Component(EpicsSignal, "9idcLAX:SAXS_z_out")
     z_limit_offset = Component(EpicsSignal, "9idcLAX:SAXS_z_limit_offset")
 
+    x_in = Component(EpicsSignal, "9idcLAX:SAXS_x_in")
+ 
     y_in = Component(EpicsSignal, "9idcLAX:SAXS_y_in")
     y_out = Component(EpicsSignal, "9idcLAX:SAXS_y_out")
     y_limit_offset = Component(EpicsSignal, "9idcLAX:SAXS_y_limit_offset")
 
+    ay_in = Component(EpicsSignal, "9idcLAX:ay_in")
+
     ax_in = Component(EpicsSignal, "9idcLAX:ax_in")
     ax_out = Component(EpicsSignal, "9idcLAX:ax_out")
     ax_limit_offset = Component(EpicsSignal, "9idcLAX:ax_limit_offset")
+
+    dy_in = Component(EpicsSignal, "9idcLAX:dy_in")
 
     dx_in = Component(EpicsSignal, "9idcLAX:dx_in")
     dx_out = Component(EpicsSignal, "9idcLAX:dx_out")

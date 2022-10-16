@@ -40,8 +40,8 @@ def reset_USAXS():
         user_data.scanning, "no",
     )
     move_list = [
-        d_stage.y, terms.USAXS.DY0.get(),
-        a_stage.y, terms.USAXS.AY0.get(),
+        d_stage.x, terms.USAXS.DX0.get(),
+        a_stage.x, terms.USAXS.AX0.get(),
         a_stage.r, terms.USAXS.ar_val_center.get(),
     ]
     if terms.USAXS.useSBUSAXS.get():

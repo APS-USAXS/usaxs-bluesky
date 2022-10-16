@@ -321,8 +321,8 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     yield from bps.mv(
         a_stage.r, terms.USAXS.ar_val_center.get(),
         # these two were moved by mode_USAXS(), belt & suspenders here
-        d_stage.y, terms.USAXS.diode.dy.get(),
-        a_stage.y, terms.USAXS.AY0.get(),
+        d_stage.x, terms.USAXS.DX0.get(),
+        a_stage.x, terms.USAXS.AX0.get(),
         timeout=MASTER_TIMEOUT,
     )
     yield from user_data.set_state_plan("Moving to Q=0")
@@ -419,9 +419,9 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
         terms.USAXS.uaterm.get(),
         terms.USAXS.num_points.get(),
         terms.USAXS.usaxs_time.get(),
-        terms.USAXS.DY0.get(),
+        terms.USAXS.DX0.get(),
         terms.USAXS.SDD.get(),
-        terms.USAXS.AY0.get(),
+        terms.USAXS.AX0.get(),
         terms.USAXS.SAD.get(),
         useDynamicTime=use_dynamic_time,
         md=_md
@@ -457,8 +457,8 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     # file writing is handled by the nxwriter callback, by a RE subscription
     yield from bps.mv(
         a_stage.r, terms.USAXS.ar_val_center.get(),
-        a_stage.y, terms.USAXS.AY0.get(),
-        d_stage.y, terms.USAXS.DY0.get(),
+        a_stage.x, terms.USAXS.AX0.get(),
+        d_stage.x, terms.USAXS.DX0.get(),
         timeout=MASTER_TIMEOUT,
         )
 
@@ -550,8 +550,8 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     yield from bps.mv(
         a_stage.r, terms.USAXS.ar_val_center.get(),
         # these two were moved by mode_USAXS(), belt & suspenders here
-        d_stage.y, terms.USAXS.diode.dy.get(),
-        a_stage.y, terms.USAXS.AY0.get(),
+        d_stage.x, terms.USAXS.DX0.get(),
+        a_stage.x, terms.USAXS.AX0.get(),
         timeout=MASTER_TIMEOUT,
     )
     yield from user_data.set_state_plan("Moving to Q=0")
@@ -624,8 +624,8 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     ### move the stages to flyscan starting values from EPICS PVs
     yield from bps.mv(
         a_stage.r, flyscan_trajectories.ar.get()[0],
-        a_stage.y, flyscan_trajectories.ay.get()[0],
-        d_stage.y, flyscan_trajectories.dy.get()[0],
+        a_stage.x, flyscan_trajectories.ax.get()[0],
+        d_stage.x, flyscan_trajectories.dx.get()[0],
         ar_start, flyscan_trajectories.ar.get()[0],
         # ay_start, flyscan_trajectories.ay.get()[0],
         # dy_start, flyscan_trajectories.dy.get()[0],

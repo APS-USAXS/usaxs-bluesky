@@ -36,10 +36,10 @@ def measure_USAXS_Transmission(md={}):
     yield from user_data.set_state_plan("Measure USAXS transmission")
     if trmssn.measure.get():
         yield from mode_USAXS()
-        ay_target = terms.USAXS.AY0.get() + constants["USAXS_AY_OFFSET"] + 12*np.sin(terms.USAXS.ar_val_center.get() * np.pi/180)
+        ax_target = terms.SAXS.ax_in.get() + constants["USAXS_AY_OFFSET"] + 12*np.sin(terms.USAXS.ar_val_center.get() * np.pi/180)
         yield from bps.mv(
-            trmssn.ay, ay_target,
-            a_stage.y, ay_target,
+            trmssn.ax, ax_target,
+            a_stage.x, ax_target,
             ti_filter_shutter, "open",
         )
         yield from insertTransmissionFilters()
@@ -70,7 +70,7 @@ def measure_USAXS_Transmission(md={}):
             s = scaler0.read()
 
         yield from bps.mv(
-            a_stage.y, terms.USAXS.AY0.get(),
+            a_stage.x, terms.USAXS.ax_in.get(),
             ti_filter_shutter, "close",
         )
         yield from insertScanFilters()
@@ -109,12 +109,12 @@ def measure_SAXS_Transmission(md={}):
     yield from mode_SAXS()
     yield from insertTransmissionFilters()
     pinz_target = terms.SAXS.z_in.get() + constants["SAXS_PINZ_OFFSET"]
-    piny_target = terms.SAXS.y_in.get() + constants["SAXS_TR_PINY_OFFSET"]
-    # z has to move before y can move.
+    pinx_target = terms.SAXS.x_in.get() + constants["SAXS_TR_PINY_OFFSET"]
+    # z has to move before x can move.
     yield from bps.mv(saxs_stage.z, pinz_target)
-    #now y can put diode in the beam, open shutter...
+    #now x can put diode in the beam, open shutter...
     yield from bps.mv(
-        saxs_stage.y, piny_target,
+        saxs_stage.x, pinx_target,
         ti_filter_shutter, "open",
     )
 
@@ -138,9 +138,9 @@ def measure_SAXS_Transmission(md={}):
         yield from no_run_trigger_and_wait([scaler0])
         s = scaler0.read()
 
-    # y has to move before z, close shutter...
+    # x has to move before z, close shutter...
     yield from bps.mv(
-        saxs_stage.y, terms.SAXS.y_in.get(),
+        saxs_stage.x, terms.SAXS.x_in.get(),
         ti_filter_shutter, "close",
     )
     # z can move.

@@ -37,9 +37,9 @@ from ..devices import user_data
 # exponent = 1.0
 # intervals = 200
 # count time = 1 s
-# DY0 = 12.83
+# DX0 = 12.83
 # SDD = 910
-# ay0 = 0
+# ax0 = 0
 # SAD = 215
 
 # Ustep(8.7474, 8.746588, 7.9, 200, 1, 0.000025)
@@ -49,7 +49,7 @@ from ..devices import user_data
 def uascan(
         start, reference, finish, minStep,
         exponent, intervals, count_time,
-        dy0, SDD_mm, ay0, SAD_mm,
+        dx0, SDD_mm, ax0, SAD_mm,
         useDynamicTime=True,
         md={}
     ):
@@ -63,8 +63,8 @@ def uascan(
     scan_cmd = (
         "uascan"
         f" ar {start} {reference} {finish} {minStep}"
-        f" {dy0} {SDD_mm}"
-        f" {ay0} {SAD_mm}"
+        f" {dx0} {SDD_mm}"
+        f" {ax0} {SAD_mm}"
         f" {exponent} {intervals} {count_time}"
     )
     plan_args = dict(
@@ -72,9 +72,9 @@ def uascan(
         reference = reference,
         finish = finish,
         minStep = minStep,
-        dy0 = dy0,
+        dx0 = dx0,
         SDD_mm = SDD_mm,
-        ay0 = ay0,
+        ax0 = ax0,
         SAD_mm = SAD_mm,
         exponent = exponent,
         intervals = intervals,
@@ -98,8 +98,8 @@ def uascan(
     asrp0 = as_stage.rp.position
     prescan_positions = {
         'sy' : s_stage.y.position,
-        'dy' : d_stage.y.position,
-        'ay' : a_stage.y.position,
+        'dx' : d_stage.x.position,
+        'ax' : a_stage.x.position,
         'ar' : a_stage.r.position,
         'asrp' : asrp0,
         }
@@ -108,9 +108,9 @@ def uascan(
     read_devices = [
         m_stage.r.user_readback,
         a_stage.r.user_readback,
-        a_stage.y.user_readback,
+        a_stage.x.user_readback,
         s_stage.y.user_readback,
-        d_stage.y.user_readback,
+        d_stage.x.user_readback,
         scaler0,
         upd_controls.auto.gain,
         I0_controls.auto.gain,
@@ -125,7 +125,7 @@ def uascan(
     trd.kind = "omitted"
     I00.kind = "omitted"
     I000.kind = "omitted"
-    for obj in (m_stage.r, a_stage.r, a_stage.y, s_stage.y, d_stage.y):
+    for obj in (m_stage.r, a_stage.r, a_stage.x, s_stage.y, d_stage.x):
         obj.kind = "omitted"
         obj.user_setpoint.kind = "omitted"
         obj.user_readback.kind = "omitted"
@@ -152,9 +152,9 @@ def uascan(
     _md['intervals'] = intervals
     _md['exponent'] = exponent
     _md['minStep'] = minStep
-    _md['dy0'] = dy0
+    _md['dx0'] = dx0
     _md['SDD_mm'] = SDD_mm
-    _md['ay0'] = ay0
+    _md['ax0'] = ax0
     _md['SAD_mm'] = SAD_mm
     _md['useDynamicTime'] = str(useDynamicTime)
 
@@ -179,16 +179,16 @@ def uascan(
                     count_time = count_time_base * 2
 
             # track ay & dy on scattered beam position
-            target_ay = ay0 + _triangulate_(target_ar-ar0, SAD_mm)
-            target_dy = dy0 + _triangulate_(target_ar-ar0, SDD_mm)
+            target_ax = ax0 + _triangulate_(target_ar-ar0, SAD_mm)
+            target_dx = dx0 + _triangulate_(target_ar-ar0, SDD_mm)
 
             # re-position the sample before each step
             target_sy = sy0 + i*terms.USAXS.sample_y_step.get()
 
             moves = [
                 a_stage.r, target_ar,
-                a_stage.y, target_ay,
-                d_stage.y, target_dy,
+                a_stage.x, target_ax,
+                d_stage.x, target_dx,
                 s_stage.y, target_sy,
                 scaler0.preset_time, count_time
             ]
@@ -253,8 +253,8 @@ def uascan(
         motor_resets = [
             # reset motors to pre-scan positions: AY, SY, DY, and "the first motor" (AR)
             s_stage.y, prescan_positions["sy"],
-            d_stage.y, prescan_positions["dy"],
-            a_stage.y, prescan_positions["ay"],
+            d_stage.x, prescan_positions["dx"],
+            a_stage.x, prescan_positions["ax"],
             a_stage.r, prescan_positions["ar"],
         ]
         if terms.USAXS.useSBUSAXS.get():
