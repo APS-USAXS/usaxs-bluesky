@@ -18,7 +18,7 @@ import math
 
 from usaxs_support.ustep import Ustep
 
-from ..devices import fuel_spray_bit
+# from ..devices import fuel_spray_bit
 from ..devices import m_stage, d_stage, a_stage, as_stage, s_stage
 from ..devices import monochromator, MONO_FEEDBACK_ON
 from ..devices import scaler0, I0, I00, I000, upd2, trd
@@ -211,7 +211,7 @@ def uascan(
                 moves += [as_stage.rp, asrp_vdc]
 
             # added for fuel spray users as indication that we are counting...
-            moves += [fuel_spray_bit, 1]
+            # moves += [fuel_spray_bit, 1]
 
             yield from user_data.set_state_plan(f"moving motors {i+1}/{intervals}")
             yield from bps.mv(*moves)
