@@ -23,7 +23,7 @@ from bluesky import plan_stubs as bps
 from ..devices.stages import a_stage, d_stage, saxs_stage
 from ..devices.shutters import ccd_shutter, ti_filter_shutter
 from ..devices.slits import guard_slit, usaxs_slit
-from ..devices.protection_plc import plc_protect
+# from ..devices.protection_plc import plc_protect
 from ..devices.general_terms import terms
 from ..devices.user_data import user_data
 from ..devices import waxsx
@@ -90,7 +90,7 @@ def move_WAXSIn():
     logger.info("Moving to WAXS mode")
 
     confirmUsaxsSaxsOutOfBeam()
-    yield from plc_protect.wait_for_interlock()
+    # yield from plc_protect.wait_for_interlock()
 
     # in case there is an error in moving, it is NOT SAFE to start a scan
     yield from bps.mv(terms.SAXS.UsaxsSaxsMode, UsaxsSaxsModes["dirty"])
@@ -156,7 +156,7 @@ def move_SAXSIn():
     logger.info("Moving to Pinhole SAXS mode")
 
     confirmUsaxsSaxsOutOfBeam()
-    yield from plc_protect.wait_for_interlock()
+    # yield from plc_protect.wait_for_interlock()
 
     # in case there is an error in moving, it is NOT SAFE to start a scan
     yield from bps.mv(terms.SAXS.UsaxsSaxsMode, UsaxsSaxsModes["dirty"])
@@ -220,7 +220,7 @@ def move_USAXSOut():
 
 
 def move_USAXSIn():
-    yield from plc_protect.stop_if_tripped()
+    # yield from plc_protect.stop_if_tripped()
     yield from bps.mv(
         ccd_shutter,        "close",
         ti_filter_shutter,  "close",
@@ -229,7 +229,7 @@ def move_USAXSIn():
     logger.info("Moving to USAXS mode")
 
     confirmUsaxsSaxsOutOfBeam()
-    yield from plc_protect.wait_for_interlock()
+    # yield from plc_protect.wait_for_interlock()
 
     # in case there is an error in moving, it is NOT SAFE to start a scan
     yield from bps.mv(terms.SAXS.UsaxsSaxsMode, UsaxsSaxsModes["dirty"])
