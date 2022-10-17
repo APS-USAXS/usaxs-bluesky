@@ -12,13 +12,18 @@ logger.info(__file__)
 
 from apstools.devices import Linkam_CI94_Device
 from apstools.devices import Linkam_T96_Device
+import warnings
 
 
 linkam_ci94 = Linkam_CI94_Device("9idcLAX:ci94:", name="ci94")
 linkam_tc1 = Linkam_T96_Device("9idcLINKAM:tc1:", name="linkam_tc1")
 
 for _o in (linkam_ci94, linkam_tc1):
-    _o.wait_for_connection()
+    try:
+        _o.wait_for_connection()
+    except Exception as exc:
+        warnings.warn(f"Linkam controller {_o.name} not connected.")
+        break
 
     # set tolerance for "in position" (Python term, not an EPICS PV)
     # note: done = |readback - setpoint| <= tolerance
@@ -33,5 +38,7 @@ for _o in (linkam_ci94, linkam_tc1):
     )
 
 # make a common term for the ramp rate (devices use different names)
-linkam_ci94.ramp = linkam_ci94.rate
-linkam_tc1.ramp = linkam_tc1.ramprate
+if linkam_ci94.connected:
+    linkam_ci94.ramp = linkam_ci94.rate
+if linkam_tc1.connected:
+    linkam_tc1.ramp = linkam_tc1.ramprate
