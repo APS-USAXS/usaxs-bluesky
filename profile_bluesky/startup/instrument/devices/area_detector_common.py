@@ -31,7 +31,7 @@ from ..session_logs import logger
 logger.info(__file__)
 
 from apstools.devices import AD_EpicsHdf5FileName
-from apstools.devices import AD_EpicsJpegFileName
+from apstools.devices import AD_EpicsJPEGFileName
 # TODO: from apstools.devices import AD_EpicsTiffFileName
 from apstools.devices import AD_plugin_primed
 from collections import OrderedDict
@@ -127,7 +127,7 @@ class myHDF5FileNames(HDF5Plugin, myHdf5EpicsIterativeWriter): ...
 class EpicsDefinesHDF5FileNames(HDF5Plugin,
                                 myHdf5EpicsIterativeWriter): ...
 
-class myJpegEpicsIterativeWriter(AD_EpicsJpegFileName,
+class myJpegEpicsIterativeWriter(AD_EpicsJPEGFileName,
                                  FileStoreIterativeWrite): ...
 class myJpegFileNames(JPEGPlugin, myJpegEpicsIterativeWriter): ...
 class EpicsDefinesJpegFileNames(JPEGPlugin,
