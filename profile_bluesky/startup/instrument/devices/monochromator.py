@@ -26,7 +26,7 @@ class MyDcmEnergy(PVPositionerSoftDoneWithStop):
     setpoint = Component(EpicsSignal, "9idcLAX:userCalc5.A")
     egu = "keV"
     stop_signal = Component(EpicsSignal, "20id:MonoSTOP", kind="omitted")
-    stop_value = "on"
+    stop_value = "on"  # FIXME: find the correct value for STOP!!
 
 
 # simple enumeration used by DCM_Feedback()
