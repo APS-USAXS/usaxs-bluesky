@@ -82,10 +82,6 @@ class DCM_Feedback(Device):
             logger.warning("!"*15)
 
 
-# TODO: Must check all code for how monochromator is used!
-# This changes monochromator.dcm into monochromator.energy.
-# Likely to need some rethinking in other code.
-
 class MyMonochromator(Device):
     #dcm = Component(KohzuSeqCtl_Monochromator, "9ida:")
     dcm = Component(My20IdDcm, "")
