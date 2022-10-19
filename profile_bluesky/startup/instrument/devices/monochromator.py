@@ -26,7 +26,25 @@ class My20idDcmEnergy(PVPositionerSoftDoneWithStop):
     setpoint = Component(EpicsSignal, "9idcLAX:userCalc5.A")
     egu = "keV"
     stop_signal = Component(EpicsSignal, "20id:MonoSTOP", kind="omitted")
-    stop_value = "on"  # FIXME: find the correct value for STOP!!
+    stop_value = 1
+
+
+class My20idWavelengthRO(EpicsSignalRO):
+
+    @property
+    def position(self):
+        return self.readback.get()
+
+
+class My20IdDcm(Device):
+    energy = Component(
+        My20idDcmEnergy,
+        "",  # PV prefix should be blank, in this case
+        # must be defined and different from each other
+        setpoint_pv="setpoint",  # ignore since 'setpoint' is already defined
+        readback_pv="readback",  # ignore since 'readback' is already defined
+    )
+    wavelength = Component(My20idWavelengthRO, "9idcLAX:userCalc3.VAL")
 
 
 # simple enumeration used by DCM_Feedback()
@@ -70,14 +88,7 @@ class DCM_Feedback(Device):
 
 class MyMonochromator(Device):
     #dcm = Component(KohzuSeqCtl_Monochromator, "9ida:")
-    energy = Component(
-        My20idDcmEnergy,
-        "",  # PV prefix should be blank, in this case
-        # must be defined and different from each other
-        setpoint_pv="setpoint",  # ignore since 'setpoint' is already defined
-        readback_pv="readback",  # ignore since 'readback' is already defined
-    )
-    wavelength = Component(EpicsSignalRO, "9idcLAX:userCalc3.VAL")
+    dcm = Component(My20IdDcm, "")
     feedback = Component(DCM_Feedback, "9idcLAX:fbe:omega")
     #temperature = Component(EpicsSignal, "9ida:DP41:s1:temp")
     #cryo_level = Component(EpicsSignal, "9idCRYO:MainLevel:val")
