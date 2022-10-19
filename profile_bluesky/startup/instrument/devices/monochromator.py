@@ -20,16 +20,12 @@ from ophyd import Component, Device, EpicsSignal, EpicsSignalRO
 from .emails import email_notices
 from ..framework import sd
 
-RBV_PV = "9idcLAX:userCalc2.VAL"
-STOP_PV = "20id:MonoSTOP"
-VAL_PV = "9idcLAX:userCalc5.A"
-
 
 class MyDcmEnergy(PVPositionerSoftDoneWithStop):
-    readback = Component(EpicsSignalRO, RBV_PV)
-    setpoint = Component(EpicsSignal, VAL_PV)
+    readback = Component(EpicsSignalRO, "9idcLAX:userCalc2.VAL")
+    setpoint = Component(EpicsSignal, "9idcLAX:userCalc5.A")
     egu = "keV"
-    stop_signal = Component(EpicsSignal, STOP_PV, kind="omitted")
+    stop_signal = Component(EpicsSignal, "20id:MonoSTOP", kind="omitted")
     stop_value = "on"
 
 
@@ -81,6 +77,7 @@ class MyMonochromator(Device):
         setpoint_pv="setpoint",  # ignore since 'setpoint' is already defined
         readback_pv="readback",  # ignore since 'readback' is already defined
     )
+    wavelength = Component(EpicsSignalRO, "9idcLAX:userCalc3.VAL")
     feedback = Component(DCM_Feedback, "9idcLAX:fbe:omega")
     #temperature = Component(EpicsSignal, "9ida:DP41:s1:temp")
     #cryo_level = Component(EpicsSignal, "9idCRYO:MainLevel:val")
