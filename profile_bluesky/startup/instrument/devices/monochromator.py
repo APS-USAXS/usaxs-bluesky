@@ -21,7 +21,7 @@ from .emails import email_notices
 from ..framework import sd
 
 
-class MyDcmEnergy(PVPositionerSoftDoneWithStop):
+class My20idDcmEnergy(PVPositionerSoftDoneWithStop):
     readback = Component(EpicsSignalRO, "9idcLAX:userCalc2.VAL")
     setpoint = Component(EpicsSignal, "9idcLAX:userCalc5.A")
     egu = "keV"
@@ -71,7 +71,7 @@ class DCM_Feedback(Device):
 class MyMonochromator(Device):
     #dcm = Component(KohzuSeqCtl_Monochromator, "9ida:")
     energy = Component(
-        MyDcmEnergy,
+        My20idDcmEnergy,
         "",  # PV prefix should be blank, in this case
         # must be defined and different from each other
         setpoint_pv="setpoint",  # ignore since 'setpoint' is already defined
