@@ -70,7 +70,7 @@ def measure_USAXS_Transmission(md={}):
             s = scaler0.read()
 
         yield from bps.mv(
-            a_stage.x, terms.USAXS.ax_in.get(),
+            a_stage.x, terms.USAXS.AX0.get(),
             ti_filter_shutter, "close",
         )
         yield from insertScanFilters()

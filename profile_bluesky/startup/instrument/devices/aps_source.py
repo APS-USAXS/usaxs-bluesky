@@ -30,6 +30,6 @@ class ApsSpecialMode(apstools.devices.ApsMachineParametersDevice):
 aps = ApsSpecialMode(name="aps")
 sd.baseline.append(aps)
 
-undulator = apstools.devices.ApsUndulatorDual(
-    "ID20", name="undulator")
+undulator = apstools.devices.ApsUndulator(
+    "ID20ds:", name="undulator")
 sd.baseline.append(undulator)

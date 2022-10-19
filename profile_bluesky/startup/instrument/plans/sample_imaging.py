@@ -5,6 +5,7 @@ take an image of the sample
 
 __all__ = ["record_sample_image_on_demand",]
 
+from ast import Not
 from ..session_logs import logger
 logger.info(__file__)
 
@@ -35,7 +36,7 @@ def record_sample_image_on_demand(technique_name, filename_base, _md):
         *dict* :
         Metadata dictionary additions from the calling plan.
     """
-    if blackfly_optical.should_save_image:
+    if blackfly_optical is not None and blackfly_optical.should_save_image:
         det = blackfly_optical  # define once here, in case it ever changes
         path = techniqueSubdirectory(technique_name)
 

@@ -15,7 +15,7 @@ logger.info(__file__)
 # from apstools.devices import KohzuSeqCtl_Monochromator
 from apstools.devices import PVPositionerSoftDoneWithStop
 from apstools.utils import run_in_thread
-from ophyd import Component, Device, EpicsSignal, EpicsSignalRO
+from ophyd import Component, Device, EpicsSignal, EpicsSignalRO, EpicsMotor
 
 from .emails import email_notices
 from ..framework import sd
@@ -33,7 +33,7 @@ class My20idWavelengthRO(EpicsSignalRO):
 
     @property
     def position(self):
-        return self.readback.get()
+        return self.get()
 
 
 class My20IdDcm(Device):
@@ -45,6 +45,7 @@ class My20IdDcm(Device):
         readback_pv="readback",  # ignore since 'readback' is already defined
     )
     wavelength = Component(My20idWavelengthRO, "9idcLAX:userCalc3.VAL")
+    theta = Component(EpicsMotor, "20id:m41")
 
 
 # simple enumeration used by DCM_Feedback()

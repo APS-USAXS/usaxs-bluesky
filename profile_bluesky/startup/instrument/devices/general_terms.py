@@ -23,7 +23,7 @@ class FlyScanParameters(Device):
     number_points = Component(EpicsSignal, "9idcLAX:USAXS:FS_NumberOfPoints")
     scan_time = Component(EpicsSignal, "9idcLAX:USAXS:FS_ScanTime")
     use_flyscan = Component(EpicsSignal, "9idcLAX:USAXS:UseFlyscan")
-    asrp_calc_SCAN = Component(EpicsSignal, "9idcLAX:userStringCalc2.SCAN")
+    #asrp_calc_SCAN = Component(EpicsSignal, "9idcLAX:userStringCalc2.SCAN")
     order_number = Component(EpicsSignal, "9idcLAX:USAXS:FS_OrderNumber")
     elapsed_time = Component(EpicsSignal, "9idcLAX:USAXS:FS_ElapsedTime")
 
@@ -97,9 +97,9 @@ class GeneralUsaxsParametersDiode(Device):
 class GeneralUsaxsParametersCenters(Device):
     "part of GeneralParameters Device"
     AR = Component(EpicsSignal,  "ARcenter")
-    ASR = Component(EpicsSignal, "ASRcenter")
+    #ASR = Component(EpicsSignal, "ASRcenter")
     MR = Component(EpicsSignal,  "MRcenter")
-    MSR = Component(EpicsSignal, "MSRcenter")
+    #MSR = Component(EpicsSignal, "MSRcenter")
 
 
 class Parameters_transmission(Device):
@@ -123,12 +123,12 @@ class Parameters_USAXS(Device):
     SAD = Component(EpicsSignal,                      "9idcLAX:USAXS:SAD")
     SDD = Component(EpicsSignal,                      "9idcLAX:USAXS:SDD")
     ar_val_center = Component(EpicsSignal,            "9idcLAX:USAXS:ARcenter")
-    asr_val_center = Component(EpicsSignal,           "9idcLAX:USAXS:ASRcenter")
+    #asr_val_center = Component(EpicsSignal,           "9idcLAX:USAXS:ASRcenter")
 
     #	ASRP_DEGREES_PER_VDC = 0.0059721     # measured by JI October 9, 2006 during setup at 32ID. Std Dev 4e-5
     #  	ASRP_DEGREES_PER_VDC = 0.00059721     # changed by factor of 10 to accomodate new PIUU controller, where we drive directly in V of high voltage.
     # Measured by JIL on 6/4/2016, average of two measured numbers
-    asrp_degrees_per_VDC = Component(Signal,          value=(0.000570223 + 0.000585857)/2)
+    #asrp_degrees_per_VDC = Component(Signal,          value=(0.000570223 + 0.000585857)/2)
 
     blackfly = Component(GeneralUsaxsParametersBlackfly, "9idcLAX:USAXS:BlackFly_")
 
@@ -140,7 +140,7 @@ class Parameters_USAXS(Device):
     is2DUSAXSscan = Component(EpicsSignal,            "9idcLAX:USAXS:is2DUSAXSscan")
     motor_prescaler_wait = Component(EpicsSignal,     "9idcLAX:USAXS:Prescaler_Wait")
     mr_val_center = Component(EpicsSignal,            "9idcLAX:USAXS:MRcenter")
-    msr_val_center = Component(EpicsSignal,           "9idcLAX:USAXS:MSRcenter")
+    #msr_val_center = Component(EpicsSignal,           "9idcLAX:USAXS:MSRcenter")
     num_points = Component(EpicsSignal,               "9idcLAX:USAXS:NumPoints")
     sample_y_step = Component(EpicsSignal,            "9idcLAX:USAXS:Sample_Y_Step")
     scan_filters = Component(Parameters_Al_Ti_Filters, "9idcLAX:USAXS:Scan_")
@@ -186,9 +186,9 @@ class Parameters_SAXS(Device):
     ax_out = Component(EpicsSignal, "9idcLAX:ax_out")
     ax_limit_offset = Component(EpicsSignal, "9idcLAX:ax_limit_offset")
 
-    dy_in = Component(EpicsSignal, "9idcLAX:dy_in")
+    dy_in = Component(EpicsSignal, "9idcLAX:USAXS:Diode_dy")
 
-    dx_in = Component(EpicsSignal, "9idcLAX:dx_in")
+    dx_in = Component(EpicsSignal, "9idcLAX:USAXS:Diode_dx")
     dx_out = Component(EpicsSignal, "9idcLAX:dx_out")
     dx_limit_offset = Component(EpicsSignal, "9idcLAX:dx_limit_offset")
 

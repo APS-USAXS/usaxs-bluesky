@@ -248,7 +248,7 @@ def uascan(
             ti_filter_shutter, "close",
             )
 
-        yield from user_data.set_state_plan("returning AR, AY, SY, and DY")
+        yield from user_data.set_state_plan("returning AR, AX, SY, and DX")
 
         motor_resets = [
             # reset motors to pre-scan positions: AY, SY, DY, and "the first motor" (AR)
@@ -257,8 +257,8 @@ def uascan(
             a_stage.x, prescan_positions["ax"],
             a_stage.r, prescan_positions["ar"],
         ]
-        if terms.USAXS.useSBUSAXS.get():
-            motor_resets += [as_stage.rp, prescan_positions["asrp"]]
+        #if terms.USAXS.useSBUSAXS.get():
+            # motor_resets += [as_stage.rp, prescan_positions["asrp"]]
         yield from bps.mv(*motor_resets)  # all at once
 
         trd.kind = "hinted" # TODO: correct value?

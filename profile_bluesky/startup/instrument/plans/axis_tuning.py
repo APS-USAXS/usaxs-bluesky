@@ -111,9 +111,10 @@ if m_stage.isChannelCut:
 
 
 def tune_msrp(md={}):
-    yield from bps.mv(scaler0.preset_time, 0.1)
-    md['plan_name'] = "tune_msrp"
-    yield from _tune_base_(ms_stage.rp, md=md)
+    pass
+    # yield from bps.mv(scaler0.preset_time, 0.1)
+    # md['plan_name'] = "tune_msrp"
+    # yield from _tune_base_(ms_stage.rp, md=md)
 
 
 def tune_ar(md={}):
@@ -127,13 +128,14 @@ def tune_ar(md={}):
 
 
 def tune_asrp(md={}):
-    yield from bps.mv(ti_filter_shutter, "open")
-    ##redundant## yield from autoscale_amplifiers([upd_controls])
-    yield from bps.mv(scaler0.preset_time, 0.1)
-    yield from bps.mv(upd_controls.auto.mode, "manual")
-    md['plan_name'] = "tune_asrp"
-    yield from _tune_base_(as_stage.rp, md=md)
-    yield from bps.mv(upd_controls.auto.mode, "auto+background")
+    pass
+#     yield from bps.mv(ti_filter_shutter, "open")
+#     ##redundant## yield from autoscale_amplifiers([upd_controls])
+#     yield from bps.mv(scaler0.preset_time, 0.1)
+#     yield from bps.mv(upd_controls.auto.mode, "manual")
+#     md['plan_name'] = "tune_asrp"
+#     yield from _tune_base_(as_stage.rp, md=md)
+#     yield from bps.mv(upd_controls.auto.mode, "auto+background")
 
 
 def tune_a2rp(md={}):
