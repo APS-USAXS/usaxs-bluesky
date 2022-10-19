@@ -699,8 +699,8 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     yield from user_data.set_state_plan("Moving USAXS back and saving data")
     yield from bps.mv(
         a_stage.r, terms.USAXS.ar_val_center.get(),
-        a_stage.y, terms.USAXS.AY0.get(),
-        d_stage.y, terms.USAXS.DY0.get(),
+        a_stage.x, terms.USAXS.AX0.get(),
+        d_stage.x, terms.USAXS.DX0.get(),
         timeout=MASTER_TIMEOUT,
         )
 
