@@ -12,12 +12,25 @@ __all__ = [
 from ..session_logs import logger
 logger.info(__file__)
 
-from apstools.devices import KohzuSeqCtl_Monochromator
+# from apstools.devices import KohzuSeqCtl_Monochromator
+from apstools.devices import PVPositionerSoftDoneWithStop
 from apstools.utils import run_in_thread
-from ophyd import Component, Device, EpicsSignal
+from ophyd import Component, Device, EpicsSignal, EpicsSignalRO
 
 from .emails import email_notices
 from ..framework import sd
+
+RBV_PV = "9idcLAX:userCalc2.VAL"
+STOP_PV = "20id:MonoSTOP"
+VAL_PV = "9idcLAX:userCalc5.A"
+
+
+class MyDcmEnergy(PVPositionerSoftDoneWithStop):
+    readback = Component(EpicsSignalRO, RBV_PV)
+    setpoint = Component(EpicsSignal, VAL_PV)
+    egu = "keV"
+    stop_signal = Component(EpicsSignal, STOP_PV, kind="omitted")
+    stop_value = "on"
 
 
 # simple enumeration used by DCM_Feedback()
@@ -55,8 +68,19 @@ class DCM_Feedback(Device):
             logger.warning("!"*15)
 
 
+# TODO: Must check all code for how monochromator is used!
+# This changes monochromator.dcm into monochromator.energy.
+# Likely to need some rethinking in other code.
+
 class MyMonochromator(Device):
     #dcm = Component(KohzuSeqCtl_Monochromator, "9ida:")
+    energy = Component(
+        MyDcmEnergy,
+        "",  # PV prefix should be blank, in this case
+        # must be defined and different from each other
+        setpoint_pv="setpoint",  # ignore since 'setpoint' is already defined
+        readback_pv="readback",  # ignore since 'readback' is already defined
+    )
     feedback = Component(DCM_Feedback, "9idcLAX:fbe:omega")
     #temperature = Component(EpicsSignal, "9ida:DP41:s1:temp")
     #cryo_level = Component(EpicsSignal, "9idCRYO:MainLevel:val")
