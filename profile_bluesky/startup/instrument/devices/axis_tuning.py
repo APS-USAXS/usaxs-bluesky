@@ -388,7 +388,7 @@ def dx_posttune_hook():
     logger.info(f"Tuning axis {stage.name}, final position is {stage.position}")
 
     if stage.tuner.tune_ok:
-        yield from bps.mv(terms.SAXS.dx_in, stage.position)
+        yield from bps.mv(terms.USAXS.DX0, stage.position)
 
     scaler0.select_channels(None)
 
@@ -425,7 +425,7 @@ def dy_posttune_hook():
     logger.info(f"Tuning axis {stage.name}, final position is {stage.position}")
 
     if stage.tuner.tune_ok:
-        yield from bps.mv(terms.USAXS.DY0, stage.position)
+        yield from bps.mv(terms.SAXS.dy_in, stage.position)
 
     scaler0.select_channels(None)
 
