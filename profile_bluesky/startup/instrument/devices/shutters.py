@@ -20,6 +20,7 @@ from apstools.devices import ApsPssShutter
 from apstools.devices import EpicsOnOffShutter
 from apstools.devices import SimulatedApsPssShutterWithStatus
 from ophyd import EpicsSignal
+from ophyd import Component
 from ophyd import Signal
 import time
 
