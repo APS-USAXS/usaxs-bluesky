@@ -117,6 +117,9 @@ def before_command_list(md=None, commands=None):
         user_data.time_stamp, str(datetime.datetime.now()),
         user_data.state, "Starting data collection",
         user_data.collection_in_progress, 1,
+    )
+
+    yield from bps.mv(
         ti_filter_shutter, "close",
         terms.SAXS.collecting, 0,
         terms.WAXS.collecting, 0,

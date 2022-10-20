@@ -16,10 +16,12 @@ from ..session_logs import logger
 logger.info(__file__)
 
 
-from apstools.devices import ApsPssShutter
+from apstools.devices import ApsPssShutterWithStatus
 from apstools.devices import EpicsOnOffShutter
 from apstools.devices import SimulatedApsPssShutterWithStatus
 from ophyd import EpicsSignal
+from ophyd import EpicsSignalRO
+from ophyd import FormattedComponent
 from ophyd import Component
 from ophyd import Signal
 import time
@@ -27,7 +29,7 @@ import time
 from .aps_source import aps
 from .permit import operations_in_9idc
 
-class My20IdPssShutter(ApsPssShutter):
+class My20IdPssShutter(ApsPssShutterWithStatus):
     """
     Controls a single APS PSS shutter at 20ID.
 
@@ -41,6 +43,11 @@ class My20IdPssShutter(ApsPssShutter):
     # bo records that reset after a short time, set to 1 to move
     open_signal = Component(EpicsSignal, "_opn")
     close_signal = Component(EpicsSignal, "_cls")
+    # bi record ZNAM=OFF, ONAM=ON
+    pss_state = FormattedComponent(EpicsSignalRO, "{self.state_pv}")
+    pss_state_open_values = [1,"ON"]
+    pss_state_closed_values = [0,"OFF"]
+
 
 # class PssShutters(Device):
 #     """
@@ -57,16 +64,19 @@ class My20IdPssShutter(ApsPssShutter):
 #     b_shutter = Component(My20IdPssShutter, "20id:shutter1")
 
 # pss_shutters = PssShutters("", name="pss_shutters")
+#pvstatus = PA:20ID:STA_A_FES_OPEN_PL or B_SBS results on "OFF" or "ON"
 
 if aps.inUserOperations and operations_in_9idc():
     FE_shutter = My20IdPssShutter(
         #20id:shutter0_opn and 20id:shutter0_cls
         "20id:shutter0",  
+        state_pv = "PA:20ID:STA_A_FES_OPEN_PL",
         name="FE_shutter")
 
     mono_shutter = My20IdPssShutter(
          #20id:shutter1_opn and 20id:shutter1_cls
-        "20id:shutter1", 
+       "20id:shutter1", 
+        state_pv = "PA:20ID:STA_B_SBS_OPEN_PL",
         name="mono_shutter")
 
     usaxs_shutter = EpicsOnOffShutter(

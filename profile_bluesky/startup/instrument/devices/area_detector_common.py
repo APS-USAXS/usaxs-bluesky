@@ -41,7 +41,7 @@ from ophyd import JPEGPlugin
 from ophyd import TIFFPlugin
 from ophyd.areadetector.filestore_mixins import FileStoreBase
 from ophyd.areadetector.filestore_mixins import FileStoreIterativeWrite
-from ophyd.utils import set_and_wait
+#from ophyd.utils import set_and_wait
 import itertools
 import numpy as np
 import time
@@ -61,7 +61,7 @@ area_detector_EPICS_PV_prefix = {
 
 
 def _validate_AD_FileWriter_path_(path, root_path):
-    if not path.startswith(root_path):
+    if not str(path).startswith(root_path):
         raise ValueError((
             f"error in file {__file__}:\n"
             f"  path '{path}' must start with '{root_path}"
@@ -81,7 +81,8 @@ class Override_AD_EpicsHdf5FileName(AD_EpicsHdf5FileName):
         filename, read_path, write_path = self.make_filename()
 
         # Ensure we do not have an old file open.
-        set_and_wait(self.capture, 0)
+        #set_and_wait(self.capture, 0)
+        self.capture.set(0).wait()
         # These must be set before parent is staged (specifically
         # before capture mode is turned on. They will not be reset
         # on 'unstage' anyway.
@@ -92,8 +93,10 @@ class Override_AD_EpicsHdf5FileName(AD_EpicsHdf5FileName):
             else:
                 write_path += "/"
 
-        set_and_wait(self.file_path, write_path)
-        set_and_wait(self.file_name, filename)
+        #set_and_wait(self.file_path, write_path)
+        self.file_path.set(write_path).wait()
+        #set_and_wait(self.file_name, filename)
+        self.file_name.set(filename).wait()
         ### set_and_wait(self.file_number, 0)
 
         # get file number now since it is incremented during stage()
@@ -188,11 +191,14 @@ def Override_AD_prime_plugin2(plugin):
 
     for sig, val in sigs.items():
         time.sleep(0.1)  # abundance of caution
-        set_and_wait(sig, val)
+        #set_and_wait(sig, val)
+        sig.set(val).wait()
+
 
     while plugin.parent.cam.acquire.get() not in (0, "Done"):
         time.sleep(.05)  # wait for acquisition to finish
 
     for sig, val in reversed(list(original_vals.items())):
         time.sleep(0.1)
-        set_and_wait(sig, val)
+        #set_and_wait(sig, val)
+        sig.set(val).wait()

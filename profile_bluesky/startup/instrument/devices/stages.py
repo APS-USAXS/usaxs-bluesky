@@ -23,6 +23,7 @@ from ophyd import Component, MotorBundle
 from ..framework import sd
 from .usaxs_motor_devices import UsaxsMotor
 from .usaxs_motor_devices import UsaxsMotorTunable
+from .usaxs_motor_devices import UsaxsArMotorTunable
 
 
 class UsaxsDetectorStageDevice(MotorBundle):
@@ -69,7 +70,7 @@ class UsaxsCollimatorSideReflectionStageDevice(MotorBundle):
 
 class UsaxsAnalyzerStageDevice(MotorBundle):
     """USAXS Analyzer stage"""
-    r = Component(UsaxsMotorTunable, '9idcAERO:m6', labels=("analyzer", "tunable"))
+    r = Component(UsaxsArMotorTunable, '9idcAERO:m6', labels=("analyzer", "tunable"))
     x = Component(UsaxsMotor, '9idcAERO:m4', labels=("analyzer",))
     y = Component(UsaxsMotor, '9idcAERO:m5', labels=("analyzer",))
     #z = Component(UsaxsMotor, '9idcLAX:m58:c0:m7', labels=("analyzer",))
