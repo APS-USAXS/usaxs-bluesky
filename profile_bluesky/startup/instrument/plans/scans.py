@@ -821,12 +821,7 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     saxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
     saxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
     saxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
-    # "capture" MUST ALWAYS come last
-    value = saxs_det.hdf1.stage_sigs.get("capture")
-    if value is not None:  # so, move to the end
-        del saxs_det.hdf1.stage_sigs["capture"]
-        saxs_det.hdf1.stage_sigs["capture"] = value
-
+    
     yield from bps.sleep(0.2)
     yield from autoscale_amplifiers([I0_controls])
 
@@ -867,7 +862,7 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
     yield from record_sample_image_on_demand("saxs", scan_title_clean, _md)
 
-    yield from areaDetectorAcquire(saxs_det, md=_md)
+    yield from areaDetectorAcquire(saxs_det, create_directory=-5, md=_md)
     ts = str(datetime.datetime.now())
     yield from bps.remove_suspender(suspend_BeamInHutch)
 
@@ -1000,11 +995,6 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     waxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
     waxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
     waxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
-    # "capture" MUST ALWAYS come last
-    value = waxs_det.hdf1.stage_sigs.get("capture")
-    if value is not None:  # so, move to the end
-        del waxs_det.hdf1.stage_sigs["capture"]
-        waxs_det.hdf1.stage_sigs["capture"] = value
 
     yield from bps.sleep(0.2)
     yield from autoscale_amplifiers([I0_controls, trd_controls])
@@ -1045,7 +1035,7 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
     yield from record_sample_image_on_demand("waxs", scan_title_clean, _md)
 
-    yield from areaDetectorAcquire(waxs_det, md=_md)
+    yield from areaDetectorAcquire(waxs_det, create_directory=-5, md=_md)
     ts = str(datetime.datetime.now())
 
     waxs_det.hdf1.stage_sigs = old_det_stage_sigs    # TODO: needed? not even useful?

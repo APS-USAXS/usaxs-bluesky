@@ -11,6 +11,8 @@ from ..session_logs import logger
 logger.info(__file__)
 
 #from ophyd.areadetector.filestore_mixins import FileStoreHDF5IterativeWrite
+# from apstools.devices import AD_EpicsHdf5FileName
+from apstools.devices.area_detector_support import AD_EpicsFileNameMixin
 from apstools.devices import CamMixin_V34
 from apstools.devices import SingleTrigger_V34
 from ophyd import ADComponent
@@ -18,6 +20,7 @@ from ophyd import AreaDetector
 from ophyd import Component, Device, EpicsSignalWithRBV
 from ophyd import PilatusDetectorCam
 from ophyd.areadetector import DetectorBase
+from ophyd.areadetector.filestore_mixins import FileStorePluginBase
 from ophyd.areadetector.filestore_mixins import FileStoreHDF5SingleIterativeWrite
 from ophyd.areadetector.plugins import HDF5Plugin_V34 as HDF5Plugin
 from ophyd.areadetector.plugins import ImagePlugin_V34 as ImagePlugin
@@ -64,7 +67,7 @@ class MyPilatusDetectorCam(CamMixin_V34, PilatusDetectorCam):
         )
 
 
-class CustomHDF5Plugin(FileStoreHDF5SingleIterativeWrite, HDF5Plugin):
+class CustomHDF5Plugin(AD_EpicsFileNameMixin, FileStoreHDF5SingleIterativeWrite, HDF5Plugin):
     """
     Add data acquisition methods to HDF5Plugin.
 
@@ -74,7 +77,11 @@ class CustomHDF5Plugin(FileStoreHDF5SingleIterativeWrite, HDF5Plugin):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # super().__init__(*args, **kwargs)
+        # alternative from AD_EpicsHdf5FileName
+        # Skip over the HDF5Plugin.__init__().
+        FileStorePluginBase.__init__(self, *args, **kwargs)
+        self.filestore_spec = "AD_HDF5"  # spec name stored in resource doc
         self.stage_sigs.update(
             dict(
                 array_callbacks="Disable",
@@ -82,6 +89,7 @@ class CustomHDF5Plugin(FileStoreHDF5SingleIterativeWrite, HDF5Plugin):
                 auto_save="Yes",
                 blocking_callbacks="No",
                 compression="zlib",
+                file_write_mode="Single",  # was Stream
                 lazy_open="Yes",
                 store_perform="No",
                 zlevel=6,
@@ -90,13 +98,19 @@ class CustomHDF5Plugin(FileStoreHDF5SingleIterativeWrite, HDF5Plugin):
         # capture is not used with Single mode
         # parent.cam.array_callbacks is staged once in the cam
         # create_directory must be set before file_path, which is set before staging
-        remove_these = """
-            capture
+        # user must control file name & path in the plan
+        these_attributes_should_not_be_staged = """
             array_counter
-            parent.cam.array_callbacks
+            capture
             create_directory
+            file_name
+            file_number
+            file_path
+            file_template
+            num_capture
+            parent.cam.array_callbacks
         """.split()
-        for k in remove_these:
+        for k in these_attributes_should_not_be_staged:
             if k in self.stage_sigs:
                 self.stage_sigs.pop(k)
 
@@ -129,6 +143,7 @@ try:
     saxs_det = MyPilatusDetector(
         prefix, name="saxs_det", labels=["camera", "area_detector"])
     saxs_det.read_attrs.append("hdf1")
+    saxs_det.image.stage_sigs["blocking_callbacks"] = "No"
 except TimeoutError as exc_obj:
     msg = f"Timeout connecting with {nm} ({prefix})"
     logger.warning(msg)

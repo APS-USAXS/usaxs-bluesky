@@ -19,7 +19,7 @@ from ..framework import RE, bec
 from ..utils.reporter import remaining_time_reporter
 
 
-def areaDetectorAcquire(det, md=None):
+def areaDetectorAcquire(det, create_directory=None, md=None):
     """
     acquire image(s) from the named area detector
     """
@@ -39,6 +39,15 @@ def areaDetectorAcquire(det, md=None):
 
     if RE.state != "idle":
         remaining_time_reporter(_md["plan_name"], acquire_time)
+
+    if create_directory is not None:
+        yield from bps.mv(det.hdf1.create_directory, create_directory)
+
+    if det.cam.num_images.get() > 1:
+        image_mode = "Multiple"
+    else:
+        image_mode = "Single"
+    det.cam.stage_sigs["image_mode"] = image_mode
 
     bec.disable_table()
     yield from bp.count([det], md=_md)          # TODO: SPEC showed users incremental progress (1 Hz updates) #175
