@@ -31,8 +31,8 @@ from apstools.utils import rss_mem
 from bluesky import plan_stubs as bps
 from IPython import get_ipython
 from ophyd import Signal
-from usaxs_support.nexus import reset_manager
-from usaxs_support.surveillance import instrument_archive
+from ..usaxs_support.nexus import reset_manager
+from ..usaxs_support.surveillance import instrument_archive
 import datetime
 import os
 import pyRestTable

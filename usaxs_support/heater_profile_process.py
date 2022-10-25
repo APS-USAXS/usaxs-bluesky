@@ -5,9 +5,9 @@ Kickoff a temperature profile on the sample heater as a Bluesky plan.
 
 This program is started/stopped/restarted from
 ``heater_profile_manager.sh``), in directory
-``~/.ipython/profile/bluesky/usaxs_support/``.
+``~/bluesky/instrument/usaxs_support/``.
 
-Imports ``~/.ipython/user/heater_profile.py``.
+Imports ``~/bluesky/user/heater_profile.py``.
 
 This file watches an EPICS PV to trigger a heater schedule
 as defined in ``heater_profile.planHeaterProcess()``.  The schedule

@@ -19,8 +19,8 @@ import os
 import time
 import uuid
 
-from usaxs_support.saveFlyData import SaveFlyScan
-from usaxs_support.saveFlyData import XML_CONFIGURATION_FILE
+from ..usaxs_support.saveFlyData import SaveFlyScan
+from ..usaxs_support.saveFlyData import XML_CONFIGURATION_FILE
 
 # NOTES for testing SaveFlyScan() command
 """

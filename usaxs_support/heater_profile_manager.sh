@@ -9,7 +9,7 @@
 
 PROCESS_NAME=heater_profile_process
 WORKING_DIR="/share1/USAXS_data/${PROCESS_NAME}"
-SCRIPT_DIR=/home/beams/USAXS/.ipython/profile_bluesky/startup/usaxs_support
+SCRIPT_DIR=/home/beams/USAXS/bluesky/instrument/usaxs_support
 WORKSTATION_HOST=usaxscontrol.xray.aps.anl.gov
 BLUESKY_ENVIRONMENT=${BLUESKY_CONDA_ENV:-"bluesky_2021_1"}
 ACTIVATE_SCRIPT=/APSshare/miniconda/x86_64/bin/activate
@@ -25,7 +25,7 @@ if [ "${WORKSTATION_HOST}" != "${HOST}" ]; then
     exit 1
     # NOTE: install this on workstation ${WORKSTATION_HOST}
     # Could be run from a crontab line (run every 5 minutes) such as:
-    #*/5 * * * * /home/beams/USAXS/.ipython/profile_bluesky/startup/usaxs_support/heater_profile_process.sh checkup 2>&1 > /dev/null
+    #*/5 * * * * /home/beams/USAXS/.ipython/bluesky/instrument/usaxs_support/heater_profile_process.sh checkup 2>&1 > /dev/null
 fi
 
 # Change YES to NO in the following line to disable screen-PID lookup
