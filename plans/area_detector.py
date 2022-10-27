@@ -49,9 +49,26 @@ def areaDetectorAcquire(det, create_directory=None, md=None):
         image_mode = "Single"
     det.cam.stage_sigs["image_mode"] = image_mode
 
+    # Remember what we've got now and reset it after the bp.count().
+    original_detector_staging = dict(
+        cam=det.cam.stage_sigs.copy()
+    )
+    # Since we have set certain detector parameters in EPICS,
+    # make sure they are not staged (to something different).
+    # Turns out this is an optimization for the Pilatus
+    # since making a significant change (~0.001 or greater)
+    # in acquire_time takes ~0.5s for camera to complete.
+    for k in "acquire_time acquire_period".split():
+        if k in det.cam.stage_sigs:
+            print(f"Removing {det.cam.name}.stage_sigs[{k}] before bp.count()")
+            det.cam.stage_sigs.pop(k)
+
     bec.disable_table()
     yield from bp.count([det], md=_md)          # TODO: SPEC showed users incremental progress (1 Hz updates) #175
     bec.enable_table()
+
+    # Restore the original detector staging.
+    det.cam.stage_sigs = original_detector_staging["cam"].copy()
 
     yield from bps.mv(user_data.scanning, "no",)  # we are done
     elapsed = time.time() - t0

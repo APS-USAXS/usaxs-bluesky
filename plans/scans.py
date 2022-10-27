@@ -122,7 +122,8 @@ def preUSAXStune(md={}):
     # TODO: install suspender using usaxs_CheckBeamStandard.get()
 
     tuners = OrderedDict()                 # list the axes to tune
-    tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
+    # 20IDB does not need tuning M stage too often. Leave to manual staff action
+    #tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
     if not m_stage.isChannelCut:
         tuners[m_stage.r2p] = tune_m2rp        # make M stage crystals parallel
     if terms.USAXS.useMSstage.get():
@@ -152,7 +153,7 @@ def preUSAXStune(md={}):
         yield from bps.sleep(1)
     yield from bps.remove_suspender(suspend_BeamInHutch)
 
-    logger.info("USAXS count time: {terms.USAXS.usaxs_time.get()} second(s)")
+    logger.info("USAXS count time: %s second(s)", terms.USAXS.usaxs_time.get())
     yield from bps.mv(
         scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
         user_data.time_stamp,       str(datetime.datetime.now()),
@@ -174,70 +175,70 @@ def preSWAXStune(md={}):
 
     USAGE:  ``RE(preSWAXStune())``
     """
-    yield from bps.mv(
-        monochromator.feedback.on, MONO_FEEDBACK_ON,
-        mono_shutter, "open",
-        ccd_shutter, "close",
-        timeout=MASTER_TIMEOUT,
-    )
-    yield from IfRequestedStopBeforeNextScan()         # stop if user chose to do so.
+    # yield from bps.mv(
+    #     monochromator.feedback.on, MONO_FEEDBACK_ON,
+    #     mono_shutter, "open",
+    #     ccd_shutter, "close",
+    #     timeout=MASTER_TIMEOUT,
+    # )
+    # yield from IfRequestedStopBeforeNextScan()         # stop if user chose to do so.
 
-    if terms.preUSAXStune.use_specific_location.get() in (1, "yes"):
-        yield from bps.mv(
-            s_stage.x, terms.preUSAXStune.sx.get(),
-            s_stage.y, terms.preUSAXStune.sy.get(),
-            timeout=MASTER_TIMEOUT,
-            )
+    # if terms.preUSAXStune.use_specific_location.get() in (1, "yes"):
+    #     yield from bps.mv(
+    #         s_stage.x, terms.preUSAXStune.sx.get(),
+    #         s_stage.y, terms.preUSAXStune.sy.get(),
+    #         timeout=MASTER_TIMEOUT,
+    #         )
 
-    yield from bps.mv(
-        user_data.time_stamp, str(datetime.datetime.now()),
-        user_data.state, "pre-SWAXS optics tune",
-        # user_data.collection_in_progress, 1,
+    # yield from bps.mv(
+    #     user_data.time_stamp, str(datetime.datetime.now()),
+    #     user_data.state, "pre-SWAXS optics tune",
+    #     # user_data.collection_in_progress, 1,
 
-        scaler0.preset_time,  0.1,
-        timeout=MASTER_TIMEOUT,
-    )
-    # when all that is complete, then ...
-    yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
+    #     scaler0.preset_time,  0.1,
+    #     timeout=MASTER_TIMEOUT,
+    # )
+    # # when all that is complete, then ...
+    # yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
 
-    # TODO: install suspender using usaxs_CheckBeamStandard.get()
+    # # TODO: install suspender using usaxs_CheckBeamStandard.get()
 
-    tuners = OrderedDict()                 # list the axes to tune
-    tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
-    if not m_stage.isChannelCut:
-        tuners[m_stage.r2p] = tune_m2rp        # make M stage crystals parallel
-    if terms.USAXS.useMSstage.get():
-        tuners[ms_stage.rp] = tune_msrp    # align MSR stage with M stage
+    # tuners = OrderedDict()                 # list the axes to tune
+    # tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
+    # if not m_stage.isChannelCut:
+    #     tuners[m_stage.r2p] = tune_m2rp        # make M stage crystals parallel
+    # if terms.USAXS.useMSstage.get():
+    #     tuners[ms_stage.rp] = tune_msrp    # align MSR stage with M stage
 
-    # now, tune the desired axes, bail out if a tune fails
-    yield from bps.install_suspender(suspend_BeamInHutch)
-    for axis, tune in tuners.items():
-        yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
-        yield from tune(md=md)
-        if axis.tuner.tune_ok:
-            # If we don't wait, the next tune often fails
-            # intensity stays flat, statistically
-            # We need to wait a short bit to allow EPICS database
-            # to complete processing and report back to us.
-            yield from bps.sleep(1)
-        else:
-            logger.warning("!!! tune failed for axis %s !!!", axis.name)
-            # break
-    yield from bps.remove_suspender(suspend_BeamInHutch)
+    # # now, tune the desired axes, bail out if a tune fails
+    # yield from bps.install_suspender(suspend_BeamInHutch)
+    # for axis, tune in tuners.items():
+    #     yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
+    #     yield from tune(md=md)
+    #     if axis.tuner.tune_ok:
+    #         # If we don't wait, the next tune often fails
+    #         # intensity stays flat, statistically
+    #         # We need to wait a short bit to allow EPICS database
+    #         # to complete processing and report back to us.
+    #         yield from bps.sleep(1)
+    #     else:
+    #         logger.warning("!!! tune failed for axis %s !!!", axis.name)
+    #         # break
+    # yield from bps.remove_suspender(suspend_BeamInHutch)
 
-    logger.info("USAXS count time: {terms.USAXS.usaxs_time.get()} second(s)")
-    yield from bps.mv(
-        scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
-        user_data.time_stamp,       str(datetime.datetime.now()),
-        user_data.state,            "pre-SWAXS optics tuning done",
-        # user_data.collection_in_progress, 0,
+    # logger.info("USAXS count time: %s second(s)", terms.USAXS.usaxs_time.get())
+    # yield from bps.mv(
+    #     scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
+    #     user_data.time_stamp,       str(datetime.datetime.now()),
+    #     user_data.state,            "pre-SWAXS optics tuning done",
+    #     # user_data.collection_in_progress, 0,
 
-        terms.preUSAXStune.num_scans_last_tune, 0,
-        terms.preUSAXStune.run_tune_next,       0,
-        terms.preUSAXStune.epoch_last_tune,     time.time(),
-        timeout=MASTER_TIMEOUT,
-    )
-
+    #     terms.preUSAXStune.num_scans_last_tune, 0,
+    #     terms.preUSAXStune.run_tune_next,       0,
+    #     terms.preUSAXStune.epoch_last_tune,     time.time(),
+    #     timeout=MASTER_TIMEOUT,
+    # )
+    yield from bps.null()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -815,6 +816,15 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         saxs_det.cam.acquire_period, terms.SAXS.acquire_time.get() + 0.004,
         timeout=MASTER_TIMEOUT,
     )
+    # Make sure these are not staged. For acquire_time,
+    # any change > 0.001 s takes ~0.5 s for Pilatus to complete!
+    do_not_stage_keys_set_in_EPICS = """
+        acquire_time acquire_period num_images num_exposures
+    """.split()
+    for k in do_not_stage_keys_set_in_EPICS:
+        if k in saxs_det.cam.stage_sigs:
+            print(f"Removing {saxs_det.cam.name}.stage_sigs[{k}].")
+            saxs_det.cam.stage_sigs.pop(k)
     old_det_stage_sigs = OrderedDict()
     for k, v in saxs_det.hdf1.stage_sigs.items():
         old_det_stage_sigs[k] = v
@@ -989,6 +999,13 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         timeout=MASTER_TIMEOUT,
     )
     yield from bps.install_suspender(suspend_BeamInHutch)
+    do_not_stage_keys_set_in_EPICS = """
+        acquire_time acquire_period num_images num_exposures
+    """.split()
+    for k in do_not_stage_keys_set_in_EPICS:
+        if k in waxs_det.cam.stage_sigs:
+            print(f"Removing {waxs_det.cam.name}.stage_sigs[{k}].")
+            waxs_det.cam.stage_sigs.pop(k)
     old_det_stage_sigs = OrderedDict()
     for k, v in waxs_det.hdf1.stage_sigs.items():
         old_det_stage_sigs[k] = v
