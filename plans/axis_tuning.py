@@ -242,8 +242,8 @@ def instrument_default_tune_ranges():
     d_stage.x.tuner.width = 10
 
     if monochromator.dcm.energy.position < 10.99:  # ~ 10 keV for Si 220 crystals
-        m_stage.r.tuner.width = 0.003
-        a_stage.r.tuner.width = 0.002
+        m_stage.r.tuner.width = 0.0035
+        a_stage.r.tuner.width = 0.003
         m_stage.r2p.tuner.width = 10
         a_stage.r2p.tuner.width = 7
         ms_stage.rp.tuner.width = 5
@@ -253,8 +253,8 @@ def instrument_default_tune_ranges():
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 10.99 <= monochromator.dcm.energy.position < 12.99:   # Si 220 crystals
-        m_stage.r.tuner.width = 0.003
-        a_stage.r.tuner.width = 0.0015
+        m_stage.r.tuner.width = 0.0035
+        a_stage.r.tuner.width = 0.0025
         m_stage.r2p.tuner.width = 9
         a_stage.r2p.tuner.width = 5
         ms_stage.rp.tuner.width = 3
@@ -264,8 +264,8 @@ def instrument_default_tune_ranges():
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 12.99 <= monochromator.dcm.energy.position < 18.1:   # Si 220 crystals
-        m_stage.r.tuner.width = 0.0030
-        a_stage.r.tuner.width = 0.0017
+        m_stage.r.tuner.width = 0.0035
+        a_stage.r.tuner.width = 0.0022
         m_stage.r2p.tuner.width = 8
         a_stage.r2p.tuner.width = 5
         ms_stage.rp.tuner.width = 3
@@ -275,8 +275,8 @@ def instrument_default_tune_ranges():
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 18.1 <= monochromator.dcm.energy.position < 20.8:   # Si 220 crystals
-        m_stage.r.tuner.width = 0.0026
-        a_stage.r.tuner.width = 0.0015
+        m_stage.r.tuner.width = 0.0035
+        a_stage.r.tuner.width = 0.002
         m_stage.r2p.tuner.width = 8
         a_stage.r2p.tuner.width = 6
         ms_stage.rp.tuner.width = 3
@@ -286,8 +286,8 @@ def instrument_default_tune_ranges():
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 20.8 <= monochromator.dcm.energy.position:   # Si 220 crystals
-        m_stage.r.tuner.width = 0.0025
-        a_stage.r.tuner.width = 0.0013
+        m_stage.r.tuner.width = 0.0035
+        a_stage.r.tuner.width = 0.0018
         m_stage.r2p.tuner.width = 8
         a_stage.r2p.tuner.width = 5
         ms_stage.rp.tuner.width = 3
