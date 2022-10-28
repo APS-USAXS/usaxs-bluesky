@@ -44,12 +44,12 @@ log_these_packages_to_the_console = [
     "examples",
     "user",
 ]
-for _l in log_these_packages_to_the_console:
-    _l = logging.getLogger(__package__)
+for logger_name in log_these_packages_to_the_console:
+    _l = logging.getLogger(logger_name)
     _l.setLevel("DEBUG")
     # the handler will only report at level="INFO"
     _l.addHandler(stream_log_handler())  # terse log to the console
-    _l.info(__file__)
+    _l.info("console logging enabled for '%s' package.", logger_name)
 
 
 # Setup logging for some bluesky/ophyd internals
