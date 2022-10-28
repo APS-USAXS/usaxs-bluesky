@@ -130,8 +130,10 @@ def preUSAXStune(md={}):
         tuners[ms_stage.rp] = tune_msrp    # align MSR stage with M stage
     if terms.USAXS.useSBUSAXS.get():
         tuners[as_stage.rp] = tune_asrp    # align ASR stage with MSR stage and set ASRP0 value
-    tuners[a_stage.r] = tune_ar            # tune A stage to M stage
     tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+    tuners[a_stage.r] = tune_ar            # tune A stage to M stage
+    # moving this up improves overall stability at 20IDB
+    #tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
 
     # now, tune the desired axes, bail out if a tune fails
     yield from bps.install_suspender(suspend_BeamInHutch)
