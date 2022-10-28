@@ -9,7 +9,9 @@ In a command file::
     run_python user/uascan_dynamic_time_on.py    
 """
 
-from instrument.session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from instrument.devices import terms

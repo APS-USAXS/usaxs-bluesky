@@ -7,7 +7,9 @@ __all__ = [
     'split_quoted_line',
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 def split_quoted_line(line):

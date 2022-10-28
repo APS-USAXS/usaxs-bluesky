@@ -6,7 +6,9 @@ suspenders : conditions that will interrupt the RunEngine execution
 __all__ = [
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from bluesky import plan_stubs as bps

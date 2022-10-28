@@ -6,7 +6,9 @@ __all__ = [
     "ptc10",
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.devices import PTC10AioChannel

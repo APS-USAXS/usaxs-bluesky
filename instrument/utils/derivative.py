@@ -5,7 +5,9 @@ derivative of two vectors: y(x), returns y'(x)
 
 __all__ = ["numerical_derivative",]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 import numpy as np

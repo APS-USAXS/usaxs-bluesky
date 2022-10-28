@@ -14,7 +14,9 @@ IMPORTANT: Assumes all objects from ./heater_profile.py are imported!
 """
 
 from user.heater_profile import MINUTE
-from instrument.session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from bluesky import plan_stubs as bps

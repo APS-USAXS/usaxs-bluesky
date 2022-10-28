@@ -8,7 +8,9 @@ __all__ = [
     "newSpecFile",
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 import apstools.callbacks
 import apstools.utils
 # import datetime

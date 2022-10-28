@@ -7,7 +7,9 @@ see: https://github.com/APS-USAXS/ipython-usaxs/issues/343
 
 __all__ = ["filename_exists",]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 import os

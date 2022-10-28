@@ -63,7 +63,9 @@ __all__ = [
     "TUNING_DET_SIGNAL",
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.plans import TuneAxis

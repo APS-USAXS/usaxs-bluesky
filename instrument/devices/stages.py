@@ -15,7 +15,9 @@ __all__ = [
     'waxs2x',       # WAXS2 detector X translation
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from ophyd import Component, MotorBundle

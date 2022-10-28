@@ -11,7 +11,9 @@ Use option is "-i -m" and no trailing ".py".  Loads as
 a *module*.  The directory is already on the search path.
 """
 
-from instrument.session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 

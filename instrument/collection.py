@@ -3,6 +3,7 @@
 configure for data collection in a console session
 """
 
+# kickoff session logging
 from .session_logs import logger
 logger.info(__file__)
 

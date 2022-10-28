@@ -1,6 +1,8 @@
 # this is a warmup instrument plan
 
-from instrument.session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from bluesky import plan_stubs as bps

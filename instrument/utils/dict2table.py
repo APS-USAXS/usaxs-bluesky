@@ -5,7 +5,9 @@ format a dictionary as a table
 
 __all__ = ["dictionary_table",]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 import pyRestTable

@@ -7,7 +7,9 @@ __all__ = [
     'terms',
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from ophyd import Component, Device, Signal

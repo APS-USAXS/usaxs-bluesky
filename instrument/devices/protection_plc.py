@@ -7,7 +7,9 @@ __all__ = [
     'plc_protect',
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from bluesky.suspenders import SuspendWhenChanged

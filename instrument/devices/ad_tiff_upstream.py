@@ -5,7 +5,9 @@ __all__ = [
     "AD_EpicsTiffFileName",
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 import itertools

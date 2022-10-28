@@ -5,7 +5,9 @@ center-of-mass and sqrt(variance) of y(x)
 
 __all__ = ["peak_center",]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 import numpy as np

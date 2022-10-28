@@ -6,7 +6,9 @@ take an image of the sample
 __all__ = ["record_sample_image_on_demand",]
 
 from ast import Not
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from ..devices import blackfly_optical

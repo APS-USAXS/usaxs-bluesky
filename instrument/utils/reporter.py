@@ -7,7 +7,9 @@ __all__ = [
     'remaining_time_reporter',
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.utils import run_in_thread

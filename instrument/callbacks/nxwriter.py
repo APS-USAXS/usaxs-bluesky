@@ -10,8 +10,12 @@ __all__ = [
     "nxwriter",
     ]
 
-# from ..session_logs import logger
-from instrument.session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from .nxwriter_usaxs import NXWriterUascan

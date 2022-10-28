@@ -7,7 +7,9 @@ __all__ = [
     'sample_data',
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.utils import trim_string_for_EPICS

@@ -6,7 +6,9 @@ __all__ = [
     "user_override",
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 import pyRestTable
 
 logger.info(__file__)

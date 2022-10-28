@@ -10,7 +10,9 @@ __all__ = [
     'blackfly_optical',
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from .area_detector_common import Override_AD_plugin_primed

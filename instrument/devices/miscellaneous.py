@@ -13,7 +13,9 @@ __all__ = [
     'userCalcs_lax',
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from ophyd import EpicsSignal

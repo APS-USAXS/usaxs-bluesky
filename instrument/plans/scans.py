@@ -11,7 +11,9 @@ __all__ = """
     WAXS
 """.split()
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.devices import SCALER_AUTOCOUNT_MODE

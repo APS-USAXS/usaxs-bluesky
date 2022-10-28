@@ -5,7 +5,9 @@ Configure matplotlib in interactive mode for Jupyter notebook
 
 __all__ = ['plt',]
 
-from ..session_logs import *
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 # %matplotlib notebook

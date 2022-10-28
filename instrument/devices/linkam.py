@@ -7,7 +7,9 @@ __all__ = [
     'linkam_tc1',
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.devices import Linkam_CI94_Device

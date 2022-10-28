@@ -69,7 +69,9 @@ __all__ = """
     """.split()
 
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.synApps import SwaitRecord

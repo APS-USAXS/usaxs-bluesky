@@ -5,7 +5,9 @@ __all__ = [
     "RE",
 ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 import apstools
 import area_detector_handlers

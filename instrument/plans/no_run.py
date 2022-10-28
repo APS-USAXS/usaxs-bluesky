@@ -5,7 +5,9 @@ plans that do not generate a run
 
 __all__ = ["no_run_trigger_and_wait",]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from bluesky import plan_stubs as bps

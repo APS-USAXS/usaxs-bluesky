@@ -12,7 +12,9 @@ __all__ = [
     # "NXWriterSaxsWaxs",    # not yet tested
     ]
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.callbacks import NXWriterAPS

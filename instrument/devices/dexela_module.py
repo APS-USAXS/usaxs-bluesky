@@ -16,7 +16,9 @@ from ophyd.areadetector.filestore_mixins import FileStoreHDF5IterativeWrite
 from ophyd.areadetector.plugins import HDF5Plugin_V34
 import datetime
 import time
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 logger.info(__file__)
 

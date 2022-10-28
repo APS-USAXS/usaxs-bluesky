@@ -16,7 +16,9 @@ __all__ = """
     TRD_SIGNAL
     """.split()
 
-from ..session_logs import logger
+import logging
+
+logger = logging.getLogger(__name__)
 logger.info(__file__)
 
 from apstools.devices import use_EPICS_scaler_channels
