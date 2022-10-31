@@ -18,6 +18,7 @@ logger.info(__file__)
 
 from apstools.devices import SCALER_AUTOCOUNT_MODE
 from bluesky import plan_stubs as bps
+from bluesky import preprocessors as bpp
 from collections import OrderedDict
 import datetime
 import os
@@ -75,6 +76,13 @@ AD_FILE_TEMPLATE = "%s%s_%4.4d.hdf"
 LOCAL_FILE_TEMPLATE = "%s_%04d.hdf"
 MASTER_TIMEOUT = 60
 user_override.register("useDynamicTime")
+MAXIMUM_SCALER_DISPLAY_RATE = 60.0  # updates/second
+
+# Make sure these are not staged. For acquire_time,
+# any change > 0.001 s takes ~0.5 s for Pilatus to complete!
+DO_NOT_STAGE_THESE_AD_CAM_KEYS__THEY_ARE_SET_IN_EPICS = """
+    acquire_time acquire_period num_images num_exposures
+""".split()
 
 
 def preUSAXStune(md={}):
@@ -480,7 +488,7 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     do one USAXS Fly Scan
     """
     plan_name = "Flyscan"
- 
+
     from .command_list import after_plan, before_plan
 
     bluesky_runengine_running = RE.state != "idle"
@@ -505,7 +513,7 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name. getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness
@@ -723,6 +731,208 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     """
     collect SAXS data
     """
+    from ._decorators import restorable_stage_sigs
+    from .command_list import after_plan, before_plan
+
+    yield from IfRequestedStopBeforeNextScan()
+    yield from before_plan()    # MUST come before mode_SAXS since it might tune
+    yield from mode_SAXS()
+
+    def _move_to_scan_positions():
+        pinz_target = terms.SAXS.z_in.get() + constants["SAXS_PINZ_OFFSET"]
+        yield from bps.mv(
+            usaxs_slit.v_size, terms.SAXS.v_size.get(),
+            usaxs_slit.h_size, terms.SAXS.h_size.get(),
+            guard_slit.v_size, terms.SAXS.guard_v_size.get(),
+            guard_slit.h_size, terms.SAXS.guard_h_size.get(),
+            saxs_stage.z, pinz_target,      # MUST move before sample stage moves!
+            user_data.sample_thickness, thickness,
+            terms.SAXS.collecting, 1,
+            # user_data.collection_in_progress, 1,
+            timeout=MASTER_TIMEOUT,
+        )
+
+        yield from bps.mv(
+            s_stage.x, pos_X,
+            s_stage.y, pos_Y,
+            timeout=MASTER_TIMEOUT,
+        )
+
+    yield from _move_to_scan_positions()
+
+    # Update Sample name. Proper sample name created by getSampleTitle(),
+    # which may also add time and temperature.  Should be called
+    # just before real data collection, after mode change and optional tuning.
+    scan_title = getSampleTitle(scan_title)
+    scan_title_clean = cleanupText(scan_title)
+
+    _md = apsbss.update_MD(md or {})
+    _md["sample_thickness_mm"] = thickness
+    _md["title"] = scan_title
+
+    # SPEC-compatibility
+    SCAN_N = RE.md["scan_id"]+1     # the next scan number (user-controllable)
+
+    # these two templates match each other, sort of
+    ad_file_template = AD_FILE_TEMPLATE
+    local_file_template = LOCAL_FILE_TEMPLATE
+
+    # path on local file system
+    SAXSscan_path = techniqueSubdirectory("saxs")
+    SAXS_file_name = local_file_template % (scan_title_clean, saxs_det.hdf1.file_number.get())
+
+    _md['plan_name'] = "SAXS"
+    _md["hdf5_file"] = SAXS_file_name
+    _md["hdf5_path"] = SAXSscan_path
+
+    # NFS-mounted path as the Pilatus detector sees it
+    pilatus_path = os.path.join("/mnt/usaxscontrol", *SAXSscan_path.split(os.path.sep)[2:])
+    # area detector will create this path if needed ("Create dir. depth" setting)
+    if not pilatus_path.endswith("/"):
+        pilatus_path += "/"        # area detector needs this
+    local_name = os.path.join(SAXSscan_path, SAXS_file_name)
+    logger.info(f"Area Detector HDF5 file: {local_name}")
+    pilatus_name = os.path.join(pilatus_path, SAXS_file_name)
+    logger.info(f"Pilatus computer Area Detector HDF5 file: {pilatus_name}")
+
+    old_delay = scaler0.delay.get()  # TODO: relocated, is it OK here?
+    def _after_acquisition():
+        yield from bps.mv(
+            scaler0.count, 0,
+            scaler1.count, 0,
+            terms.SAXS_WAXS.I0, scaler1.channels.chan02.s.get(),
+            scaler0.display_rate, 5,
+            scaler1.display_rate, 5,
+            terms.SAXS_WAXS.end_exposure_time, ts,
+            scaler0.delay, old_delay,
+
+            terms.SAXS.collecting, 0,
+            user_data.state, "Done SAXS",
+            user_data.time_stamp, ts,
+            # user_data.collection_in_progress, 0,
+            timeout=MASTER_TIMEOUT,
+        )
+
+    @restorable_stage_sigs([saxs_det.cam, saxs_det.hdf1])
+    @bpp.suspend_wrapper(suspend_BeamInHutch)
+    def _SAXS_acquisition_steps():
+        for k in DO_NOT_STAGE_THESE_AD_CAM_KEYS__THEY_ARE_SET_IN_EPICS:
+            if k in saxs_det.cam.stage_sigs:
+                print(f"Removing {saxs_det.cam.name}.stage_sigs[{k}].")
+                saxs_det.cam.stage_sigs.pop(k)
+
+        # define these prep steps first, call them below in the desired order.
+        def _prepare_ad_cam_plugin():
+            yield from bps.mv(
+                saxs_det.cam.num_images, terms.SAXS.num_images.get(),
+                saxs_det.cam.acquire_time, terms.SAXS.acquire_time.get(),
+                saxs_det.cam.acquire_period, terms.SAXS.acquire_time.get() + 0.004,
+                timeout=MASTER_TIMEOUT,
+            )
+
+        def _prepare_ad_hdf1_plugin():
+            saxs_det.hdf1.file_path._auto_monitor = False
+            saxs_det.hdf1.file_template._auto_monitor = False
+            yield from bps.mv(
+                saxs_det.hdf1.file_name, scan_title_clean,
+                saxs_det.hdf1.file_path, pilatus_path,
+                saxs_det.hdf1.file_template, ad_file_template,
+                timeout=MASTER_TIMEOUT,
+                # auto_monitor=False,
+            )
+            saxs_det.hdf1.file_path._auto_monitor = True
+            saxs_det.hdf1.file_template._auto_monitor = True
+
+            saxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
+            saxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
+            saxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
+
+        def _prepare_incoming_beam():
+            yield from bps.mv(
+                mono_shutter, "open",
+                monochromator.feedback.on, MONO_FEEDBACK_OFF,
+                ti_filter_shutter, "open",
+                timeout=MASTER_TIMEOUT,
+            )
+
+        def _prepare_scalers():
+            yield from bps.mv(
+                scaler1.preset_time, terms.SAXS.acquire_time.get() + 1,
+                scaler0.preset_time, 1.2*terms.SAXS.acquire_time.get() + 1,
+                scaler0.count_mode, "OneShot",
+                scaler1.count_mode, "OneShot",
+
+                # update as fast as hardware will allow
+                # this is needed to make sure we get as up to date I0 number as possible for AD software.
+                scaler0.display_rate, MAXIMUM_SCALER_DISPLAY_RATE,
+                scaler1.display_rate, MAXIMUM_SCALER_DISPLAY_RATE,
+
+                scaler0.delay, 0,
+                terms.SAXS_WAXS.start_exposure_time, ts,
+                user_data.state, f"SAXS collection for {terms.SAXS.acquire_time.get()} s",
+                user_data.spec_scan, str(SCAN_N),
+                timeout=MASTER_TIMEOUT,
+            )
+
+        def _prepare_user_data():
+            yield from bps.mv(
+                user_data.sample_title, scan_title,
+                user_data.state, "starting SAXS collection",
+                user_data.sample_thickness, thickness,
+                user_data.spec_scan, str(SCAN_N),
+                user_data.time_stamp, ts,
+                user_data.scan_macro, "SAXS",       # match the value in the scan logs
+                timeout=MASTER_TIMEOUT,
+            )
+            yield from bps.mv(
+                user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
+                timeout=MASTER_TIMEOUT,
+            )
+
+        def _close_Ti_shutter():
+            yield from bps.mv(
+                ti_filter_shutter, "close",
+                timeout=MASTER_TIMEOUT,
+            )
+
+        def _start_scalers():
+            yield from bps.mv(
+                scaler0.count, 1,
+                scaler1.count, 1,
+                timeout=MASTER_TIMEOUT,
+            )
+
+        # now, call the acquisition steps
+        yield from _prepare_ad_hdf1_plugin()
+        ts = str(datetime.datetime.now())
+        yield from _prepare_user_data()
+        yield from measure_SAXS_Transmission()
+        yield from insertSaxsFilters()
+        yield from _prepare_incoming_beam()
+        yield from _prepare_ad_cam_plugin()
+        yield from bps.sleep(0.2)
+
+        yield from autoscale_amplifiers([I0_controls])
+        yield from _close_Ti_shutter()  # to be sure, after autoscale_amplifiers()
+        SCAN_N = RE.md["scan_id"]+1     # update with next number
+        yield from _prepare_scalers()
+
+        yield from _start_scalers()
+        yield from record_sample_image_on_demand("saxs", scan_title_clean, _md)
+        yield from areaDetectorAcquire(saxs_det, create_directory=-5, md=_md)
+        ts = str(datetime.datetime.now())
+
+    yield from _SAXS_acquisition_steps()
+    yield from _after_acquisition()
+
+    logger.info(f"I0 value: {terms.SAXS_WAXS.I0.get()}")
+    yield from after_plan()
+
+
+def SAXS_OLD(pos_X, pos_Y, thickness, scan_title, md=None):
+    """
+    collect SAXS data
+    """
 
     from .command_list import after_plan, before_plan
 
@@ -752,7 +962,7 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name. getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness
@@ -820,12 +1030,7 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         saxs_det.cam.acquire_period, terms.SAXS.acquire_time.get() + 0.004,
         timeout=MASTER_TIMEOUT,
     )
-    # Make sure these are not staged. For acquire_time,
-    # any change > 0.001 s takes ~0.5 s for Pilatus to complete!
-    do_not_stage_keys_set_in_EPICS = """
-        acquire_time acquire_period num_images num_exposures
-    """.split()
-    for k in do_not_stage_keys_set_in_EPICS:
+    for k in DO_NOT_STAGE_THESE_AD_CAM_KEYS__THEY_ARE_SET_IN_EPICS:
         if k in saxs_det.cam.stage_sigs:
             print(f"Removing {saxs_det.cam.name}.stage_sigs[{k}].")
             saxs_det.cam.stage_sigs.pop(k)
@@ -835,7 +1040,7 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     saxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
     saxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
     saxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
-    
+
     yield from bps.sleep(0.2)
     yield from autoscale_amplifiers([I0_controls])
 
@@ -854,8 +1059,8 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
         # update as fast as hardware will allow
         # this is needed to make sure we get as up to date I0 number as possible for AD software.
-        scaler0.display_rate, 60,
-        scaler1.display_rate, 60,
+        scaler0.display_rate, MAXIMUM_SCALER_DISPLAY_RATE,
+        scaler1.display_rate, MAXIMUM_SCALER_DISPLAY_RATE,
 
         scaler0.delay, 0,
         terms.SAXS_WAXS.start_exposure_time, ts,
@@ -935,12 +1140,12 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name.  getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.     
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness
     _md["title"] = scan_title
- 
+
     scan_title_clean = cleanupText(scan_title)
 
     # SPEC-compatibility
@@ -1003,10 +1208,7 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         timeout=MASTER_TIMEOUT,
     )
     yield from bps.install_suspender(suspend_BeamInHutch)
-    do_not_stage_keys_set_in_EPICS = """
-        acquire_time acquire_period num_images num_exposures
-    """.split()
-    for k in do_not_stage_keys_set_in_EPICS:
+    for k in DO_NOT_STAGE_THESE_AD_CAM_KEYS__THEY_ARE_SET_IN_EPICS:
         if k in waxs_det.cam.stage_sigs:
             print(f"Removing {waxs_det.cam.name}.stage_sigs[{k}].")
             waxs_det.cam.stage_sigs.pop(k)
