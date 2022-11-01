@@ -19,11 +19,13 @@ logger.info(__file__)
 
 from apstools.devices import SCALER_AUTOCOUNT_MODE
 from bluesky import plan_stubs as bps
+from bluesky import preprocessors as bpp
 from collections import OrderedDict
 import datetime
 import os
 import time
 
+from ._to_be_hoisted import restorable_stage_sigs
 from ..devices import a_stage, as_stage
 from ..devices import apsbss
 from ..devices import ar_start
@@ -76,6 +78,12 @@ AD_FILE_TEMPLATE = "%s%s_%4.4d.hdf"
 LOCAL_FILE_TEMPLATE = "%s_%04d.hdf"
 MASTER_TIMEOUT = 60
 user_override.register("useDynamicTime")
+
+# Make sure these are not staged. For acquire_time,
+# any change > 0.001 s takes ~0.5 s for Pilatus to complete!
+DO_NOT_STAGE_THESE_KEYS___THEY_ARE_SET_IN_EPICS = """
+    acquire_time acquire_period num_images num_exposures
+""".split()
 
 
 def preUSAXStune(md={}):
@@ -174,7 +182,7 @@ def preUSAXStune(md={}):
 def allUSAXStune(md={}):
     """
     tune mr, ar, a2rp, ar, a2rp USAXS optics
-    
+
     USAGE:  ``RE(allUSAXStune())``
     """
     yield from bps.mv(
@@ -573,7 +581,7 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     do one USAXS Fly Scan
     """
     plan_name = "Flyscan"
- 
+
     from .command_list import after_plan, before_plan
 
     bluesky_runengine_running = RE.state != "idle"
@@ -598,7 +606,7 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name. getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness
@@ -845,9 +853,10 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name. getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning. 
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
+    _md['plan_name'] = "SAXS"
     _md["sample_thickness_mm"] = thickness
     _md["title"] = scan_title
 
@@ -863,6 +872,9 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     # path on local file system
     SAXSscan_path = techniqueSubdirectory("saxs")
     SAXS_file_name = local_file_template % (scan_title_clean, saxs_det.hdf1.file_number.get())
+    _md["hdf5_path"] = str(SAXSscan_path)
+    _md["hdf5_file"] = str(SAXS_file_name)
+
     # NFS-mounted path as the Pilatus detector sees it
     pilatus_path = os.path.join("/mnt/usaxscontrol", *SAXSscan_path.split(os.path.sep)[2:])
     # area detector will create this path if needed ("Create dir. depth" setting)
@@ -898,84 +910,72 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     yield from bps.mv(
         user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
         timeout=MASTER_TIMEOUT,
-   )
-
-    yield from bps.install_suspender(suspend_BeamInHutch)
-    yield from measure_SAXS_Transmission()
-    yield from insertSaxsFilters()
-
-    yield from bps.mv(
-        mono_shutter, "open",
-        monochromator.feedback.on, MONO_FEEDBACK_OFF,
-        ti_filter_shutter, "open",
-        saxs_det.cam.num_images, terms.SAXS.num_images.get(),
-        saxs_det.cam.acquire_time, terms.SAXS.acquire_time.get(),
-        saxs_det.cam.acquire_period, terms.SAXS.acquire_time.get() + 0.004,
-        timeout=MASTER_TIMEOUT,
     )
-    # Make sure these are not staged. For acquire_time,
-    # any change > 0.001 s takes ~0.5 s for Pilatus to complete!
-    do_not_stage_keys_set_in_EPICS = """
-        acquire_time acquire_period num_images num_exposures
-    """.split()
-    for k in do_not_stage_keys_set_in_EPICS:
-        if k in saxs_det.cam.stage_sigs:
-            print(f"Removing {saxs_det.cam.name}.stage_sigs[{k}].")
-            saxs_det.cam.stage_sigs.pop(k)
-    old_det_stage_sigs = OrderedDict()
-    for k, v in saxs_det.hdf1.stage_sigs.items():
-        old_det_stage_sigs[k] = v
-    saxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
-    saxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
-    saxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
-    
-    yield from bps.sleep(0.2)
-    yield from autoscale_amplifiers([I0_controls])
-
-    yield from bps.mv(
-        ti_filter_shutter, "close",
-        timeout=MASTER_TIMEOUT,
-    )
-
-    SCAN_N = RE.md["scan_id"]+1     # update with next number
     old_delay = scaler0.delay.get()
-    yield from bps.mv(
-        scaler1.preset_time, terms.SAXS.acquire_time.get() + 1,
-        scaler0.preset_time, 1.2*terms.SAXS.acquire_time.get() + 1,
-        scaler0.count_mode, "OneShot",
-        scaler1.count_mode, "OneShot",
 
-        # update as fast as hardware will allow
-        # this is needed to make sure we get as up to date I0 number as possible for AD software.
-        scaler0.display_rate, 60,
-        scaler1.display_rate, 60,
+    @restorable_stage_sigs([saxs_det.cam, saxs_det.hdf1])
+    @bpp.suspend_decorator(suspend_BeamInHutch)
+    def _image_acquisition_steps(): 
+        yield from measure_SAXS_Transmission()
+        yield from insertSaxsFilters()
 
-        scaler0.delay, 0,
-        terms.SAXS_WAXS.start_exposure_time, ts,
-        user_data.state, f"SAXS collection for {terms.SAXS.acquire_time.get()} s",
-        user_data.spec_scan, str(SCAN_N),
-        timeout=MASTER_TIMEOUT,
-    )
+        yield from bps.mv(
+            mono_shutter, "open",
+            monochromator.feedback.on, MONO_FEEDBACK_OFF,
+            ti_filter_shutter, "open",
+            saxs_det.cam.num_images, terms.SAXS.num_images.get(),
+            saxs_det.cam.acquire_time, terms.SAXS.acquire_time.get(),
+            saxs_det.cam.acquire_period, terms.SAXS.acquire_time.get() + 0.004,
+            timeout=MASTER_TIMEOUT,
+        )
+        for k in DO_NOT_STAGE_THESE_KEYS___THEY_ARE_SET_IN_EPICS:
+            if k in saxs_det.cam.stage_sigs:
+                print(f"Removing {saxs_det.cam.name}.stage_sigs[{k}].")
+                saxs_det.cam.stage_sigs.pop(k)
+        saxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
+        saxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
+        saxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
 
-    # replaced by  9idcLAX:userTran1
-    # yield from bps.mv(
-    #     scaler0.count, 1,
-    #     scaler1.count, 1,
-    #     timeout=MASTER_TIMEOUT,
-    # )
+        yield from bps.sleep(0.2)
+        yield from autoscale_amplifiers([I0_controls])
 
-    _md['plan_name'] = "SAXS"
-    _md["hdf5_file"] = SAXS_file_name
-    _md["hdf5_path"] = SAXSscan_path
+        yield from bps.mv(
+            ti_filter_shutter, "close",
+            timeout=MASTER_TIMEOUT,
+        )
 
-    yield from record_sample_image_on_demand("saxs", scan_title_clean, _md)
+        SCAN_N = RE.md["scan_id"]+1     # update with next number
+        yield from bps.mv(
+            scaler1.preset_time, terms.SAXS.acquire_time.get() + 1,
+            scaler0.preset_time, 1.2*terms.SAXS.acquire_time.get() + 1,
+            scaler0.count_mode, "OneShot",
+            scaler1.count_mode, "OneShot",
 
-    yield from areaDetectorAcquire(saxs_det, create_directory=-5, md=_md)
+            # update as fast as hardware will allow
+            # this is needed to make sure we get as up to date I0 number as possible for AD software.
+            scaler0.display_rate, 60,
+            scaler1.display_rate, 60,
+
+            scaler0.delay, 0,
+            terms.SAXS_WAXS.start_exposure_time, ts,
+            user_data.state, f"SAXS collection for {terms.SAXS.acquire_time.get()} s",
+            user_data.spec_scan, str(SCAN_N),
+            timeout=MASTER_TIMEOUT,
+        )
+
+        # replaced by  9idcLAX:userTran1
+        # yield from bps.mv(
+        #     scaler0.count, 1,
+        #     scaler1.count, 1,
+        #     timeout=MASTER_TIMEOUT,
+        # )
+
+        yield from record_sample_image_on_demand("saxs", scan_title_clean, _md)
+        yield from areaDetectorAcquire(saxs_det, create_directory=-5, md=_md)
+
+    yield from _image_acquisition_steps()
+
     ts = str(datetime.datetime.now())
-    yield from bps.remove_suspender(suspend_BeamInHutch)
-
-    saxs_det.hdf1.stage_sigs = old_det_stage_sigs    # TODO: needed? not even useful?
-
     yield from bps.mv(
         # scaler0.count, 0,
         # scaler1.count, 0,
@@ -1029,12 +1029,13 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     )
 
     # Update Sample name.  getSampleTitle is used to create proper sample name. It may add time and temperature
-    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.     
+    #   therefore it needs to be done close to real data collection, after mode chaneg and optional tuning.
     scan_title = getSampleTitle(scan_title)
     _md = apsbss.update_MD(md or {})
     _md["sample_thickness_mm"] = thickness
     _md["title"] = scan_title
- 
+    _md['plan_name'] = "WAXS"
+
     scan_title_clean = cleanupText(scan_title)
 
     # SPEC-compatibility
@@ -1047,6 +1048,9 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     # path on local file system
     WAXSscan_path = techniqueSubdirectory("waxs")
     WAXS_file_name = local_file_template % (scan_title_clean, waxs_det.hdf1.file_number.get())
+    _md["hdf5_path"] = str(WAXSscan_path)
+    _md["hdf5_file"] = str(WAXS_file_name)
+
     # NFS-mounted path as the Pilatus detector sees it
     pilatus_path = os.path.join("/mnt/usaxscontrol", *WAXSscan_path.split(os.path.sep)[2:])
     # area detector will create this path if needed ("Create dir. depth" setting)
@@ -1083,79 +1087,71 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
         timeout=MASTER_TIMEOUT,
    )
-
-    #yield from measure_SAXS_Transmission()
-    yield from insertWaxsFilters()
-
-    yield from bps.mv(
-        mono_shutter, "open",
-        monochromator.feedback.on, MONO_FEEDBACK_OFF,
-        ti_filter_shutter, "open",
-        waxs_det.cam.num_images, terms.WAXS.num_images.get(),
-        waxs_det.cam.acquire_time, terms.WAXS.acquire_time.get(),
-        waxs_det.cam.acquire_period, terms.WAXS.acquire_time.get() + 0.004,
-        timeout=MASTER_TIMEOUT,
-    )
-    yield from bps.install_suspender(suspend_BeamInHutch)
-    do_not_stage_keys_set_in_EPICS = """
-        acquire_time acquire_period num_images num_exposures
-    """.split()
-    for k in do_not_stage_keys_set_in_EPICS:
-        if k in waxs_det.cam.stage_sigs:
-            print(f"Removing {waxs_det.cam.name}.stage_sigs[{k}].")
-            waxs_det.cam.stage_sigs.pop(k)
-    old_det_stage_sigs = OrderedDict()
-    for k, v in waxs_det.hdf1.stage_sigs.items():
-        old_det_stage_sigs[k] = v
-    waxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
-    waxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
-    waxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
-
-    yield from bps.sleep(0.2)
-    yield from autoscale_amplifiers([I0_controls, trd_controls])
-
-    yield from bps.mv(
-        ti_filter_shutter, "close",
-        timeout=MASTER_TIMEOUT,
-    )
-
     old_delay = scaler0.delay.get()
-    yield from bps.mv(
-        scaler1.preset_time, terms.WAXS.acquire_time.get() + 1,
-        scaler0.preset_time, 1.2*terms.WAXS.acquire_time.get() + 1,
-        scaler0.count_mode, "OneShot",
-        scaler1.count_mode, "OneShot",
 
-        # update as fast as hardware will allow
-        # this is needed to make sure we get as up to date I0 number as possible for AD software.
-        scaler0.display_rate, 60,
-        scaler1.display_rate, 60,
+    @restorable_stage_sigs([waxs_det.cam, waxs_det.hdf1])
+    @bpp.suspend_decorator(suspend_BeamInHutch)
+    def _image_acquisition_steps(): 
+        #yield from measure_SAXS_Transmission()
+        yield from insertWaxsFilters()
 
-        scaler0.delay, 0,
-        terms.SAXS_WAXS.start_exposure_time, ts,
-        user_data.state,
-            f"WAXS collection for {terms.WAXS.acquire_time.get()} s",
-        timeout=MASTER_TIMEOUT,
-    )
+        yield from bps.mv(
+            mono_shutter, "open",
+            monochromator.feedback.on, MONO_FEEDBACK_OFF,
+            ti_filter_shutter, "open",
+            waxs_det.cam.num_images, terms.WAXS.num_images.get(),
+            waxs_det.cam.acquire_time, terms.WAXS.acquire_time.get(),
+            waxs_det.cam.acquire_period, terms.WAXS.acquire_time.get() + 0.004,
+            timeout=MASTER_TIMEOUT,
+        )
+        for k in DO_NOT_STAGE_THESE_KEYS___THEY_ARE_SET_IN_EPICS:
+            if k in waxs_det.cam.stage_sigs:
+                print(f"Removing {waxs_det.cam.name}.stage_sigs[{k}].")
+                waxs_det.cam.stage_sigs.pop(k)
+        waxs_det.hdf1.stage_sigs["file_template"] = ad_file_template
+        waxs_det.hdf1.stage_sigs["file_write_mode"] = "Single"
+        waxs_det.hdf1.stage_sigs["blocking_callbacks"] = "No"
 
-    # replaced by  9idcLAX:userTran1
-    # yield from bps.mv(
-    #     scaler0.count, 1,
-    #     scaler1.count, 1,
-    #     timeout=MASTER_TIMEOUT,
-    # )
+        yield from bps.sleep(0.2)
+        yield from autoscale_amplifiers([I0_controls, trd_controls])
 
-    _md['plan_name'] = "WAXS"
-    _md["hdf5_file"] = WAXS_file_name
-    _md["hdf5_path"] = WAXSscan_path
+        yield from bps.mv(
+            ti_filter_shutter, "close",
+            timeout=MASTER_TIMEOUT,
+        )
 
-    yield from record_sample_image_on_demand("waxs", scan_title_clean, _md)
+        yield from bps.mv(
+            scaler1.preset_time, terms.WAXS.acquire_time.get() + 1,
+            scaler0.preset_time, 1.2*terms.WAXS.acquire_time.get() + 1,
+            scaler0.count_mode, "OneShot",
+            scaler1.count_mode, "OneShot",
 
-    yield from areaDetectorAcquire(waxs_det, create_directory=-5, md=_md)
+            # update as fast as hardware will allow
+            # this is needed to make sure we get as up to date I0 number as possible for AD software.
+            scaler0.display_rate, 60,
+            scaler1.display_rate, 60,
+
+            scaler0.delay, 0,
+            terms.SAXS_WAXS.start_exposure_time, ts,
+            user_data.state,
+                f"WAXS collection for {terms.WAXS.acquire_time.get()} s",
+            timeout=MASTER_TIMEOUT,
+        )
+
+        # replaced by  9idcLAX:userTran1
+        # yield from bps.mv(
+        #     scaler0.count, 1,
+        #     scaler1.count, 1,
+        #     timeout=MASTER_TIMEOUT,
+        # )
+
+        yield from record_sample_image_on_demand("waxs", scan_title_clean, _md)
+
+        yield from areaDetectorAcquire(waxs_det, create_directory=-5, md=_md)
+
+    yield from _image_acquisition_steps()
+
     ts = str(datetime.datetime.now())
-
-    waxs_det.hdf1.stage_sigs = old_det_stage_sigs    # TODO: needed? not even useful?
-
     yield from bps.mv(
         # scaler0.count, 0,
         # scaler1.count, 0,
@@ -1176,6 +1172,6 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         #user_data.collection_in_progress, 0,
         timeout=MASTER_TIMEOUT,
     )
-    yield from bps.remove_suspender(suspend_BeamInHutch)
+
     logger.info(f"I0 value: {terms.SAXS_WAXS.I0.get()}")
     yield from after_plan()
