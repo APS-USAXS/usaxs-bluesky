@@ -58,20 +58,21 @@ if aps.inUserOperations:
     #     aps.current, 2, resume_thresh=10, sleep=100)
     # RE.install_suspender(suspend_APS_current)
 
-    # suspend if we do not believe white beam is ready
-    # considers:
-    #   - APS storage ring current
-    #   - 9ID undulator
-    #   - white beam shutter
-    # Signal provided by 9idcLAX:userCalc9 PV (swait record)
-    fb = FeedbackHandlingDuringSuspension()
-    suspender_white_beam_ready = bluesky.suspenders.SuspendBoolLow(
-        white_beam_ready.available,
-        pre_plan=fb.mono_beam_lost_plan,
-        sleep=100,  # RE sleeps _before_ calling post_plan
-        post_plan=fb.mono_beam_just_came_back_but_after_sleep_plan,
-    )
-    RE.install_suspender(suspender_white_beam_ready)
+    # # 2022.10.31, PRJ: Code not necessary at 20-ID-B, issue 570
+    # # suspend if we do not believe white beam is ready
+    # # considers:
+    # #   - APS storage ring current
+    # #   - 9ID undulator
+    # #   - white beam shutter
+    # # Signal provided by 9idcLAX:userCalc9 PV (swait record)
+    # fb = FeedbackHandlingDuringSuspension()
+    # suspender_white_beam_ready = bluesky.suspenders.SuspendBoolLow(
+    #     white_beam_ready.available,
+    #     pre_plan=fb.mono_beam_lost_plan,
+    #     sleep=100,  # RE sleeps _before_ calling post_plan
+    #     post_plan=fb.mono_beam_just_came_back_but_after_sleep_plan,
+    # )
+    # RE.install_suspender(suspender_white_beam_ready)
 
     # remove comment if likely to use this suspender (issue #170)
     # suspend_FE_shutter = bluesky.suspenders.SuspendFloor(FE_shutter.pss_state, 1)
