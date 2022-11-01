@@ -6,6 +6,7 @@ user-facing scans
 __all__ = """
     preSWAXStune
     preUSAXStune
+    allUSAXStune
     SAXS
     USAXSscan
     WAXS
@@ -136,6 +137,98 @@ def preUSAXStune(md={}):
     tuners[a_stage.r] = tune_ar            # tune A stage to M stage
     # moving this up improves overall stability at 20IDB
     #tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+
+    # now, tune the desired axes, bail out if a tune fails
+    yield from bps.install_suspender(suspend_BeamInHutch)
+    for axis, tune in tuners.items():
+        yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
+        yield from tune(md=md)
+        if not axis.tuner.tune_ok:
+            logger.warning("!!! tune failed for axis %s !!!", axis.name)
+            if NOTIFY_ON_BADTUNE:
+                email_notices.send(
+                    f"USAXS tune failed for axis {axis.name}",
+                    f"USAXS tune failed for axis {axis.name}"
+                    )
+
+        # If we don't wait, the next tune often fails
+        # intensity stays flat, statistically
+        # We need to wait a short bit to allow EPICS database
+        # to complete processing and report back to us.
+        yield from bps.sleep(1)
+    yield from bps.remove_suspender(suspend_BeamInHutch)
+
+    logger.info("USAXS count time: %s second(s)", terms.USAXS.usaxs_time.get())
+    yield from bps.mv(
+        scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
+        user_data.time_stamp,       str(datetime.datetime.now()),
+        # user_data.collection_in_progress, 0,
+        user_data.state,            "pre-USAXS optics tuning done",
+
+        terms.preUSAXStune.num_scans_last_tune, 0,
+        terms.preUSAXStune.run_tune_next,       0,
+        terms.preUSAXStune.epoch_last_tune,     time.time(),
+        timeout=MASTER_TIMEOUT,
+    )
+
+def allUSAXStune(md={}):
+    """
+    tune mr, ar, a2rp, ar, a2rp USAXS optics
+    
+    USAGE:  ``RE(allUSAXStune())``
+    """
+    yield from bps.mv(
+        monochromator.feedback.on, MONO_FEEDBACK_ON,
+        mono_shutter, "open",
+        ccd_shutter, "close",
+        timeout=MASTER_TIMEOUT,
+    )
+    yield from IfRequestedStopBeforeNextScan()         # stop if user chose to do so.
+
+    yield from mode_USAXS()
+
+    if terms.preUSAXStune.use_specific_location.get() in (1, "yes"):
+        yield from bps.mv(
+            s_stage.x, terms.preUSAXStune.sx.get(),
+            s_stage.y, terms.preUSAXStune.sy.get(),
+            timeout=MASTER_TIMEOUT,
+            )
+
+    yield from bps.mv(
+        # ensure diode in place (Radiography puts it elsewhere)
+        d_stage.x, terms.USAXS.diode.dx.get(),
+        d_stage.y, terms.USAXS.diode.dy.get(),
+
+        user_data.time_stamp, str(datetime.datetime.now()),
+        user_data.state, "pre-USAXS optics tune",
+        # user_data.collection_in_progress, 1,
+
+        # Is this covered by user_mode, "USAXS"?
+        usaxs_slit.v_size,  terms.SAXS.usaxs_v_size.get(),
+        usaxs_slit.h_size,  terms.SAXS.usaxs_h_size.get(),
+        guard_slit.v_size,  terms.SAXS.usaxs_guard_v_size.get(),
+        guard_slit.h_size,  terms.SAXS.usaxs_guard_h_size.get(),
+
+        scaler0.preset_time,  0.1,
+        timeout=MASTER_TIMEOUT,
+    )
+    # when all that is complete, then ...
+    yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
+
+    # TODO: install suspender using usaxs_CheckBeamStandard.get()
+
+    tuners = OrderedDict()                 # list the axes to tune
+    tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
+    if not m_stage.isChannelCut:
+        tuners[m_stage.r2p] = tune_m2rp        # make M stage crystals parallel
+    if terms.USAXS.useMSstage.get():
+        tuners[ms_stage.rp] = tune_msrp    # align MSR stage with M stage
+    if terms.USAXS.useSBUSAXS.get():
+        tuners[as_stage.rp] = tune_asrp    # align ASR stage with MSR stage and set ASRP0 value
+    tuners[a_stage.r] = tune_ar            # tune A stage to M stage
+    tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+    tuners[a_stage.r] = tune_ar            # tune A stage to M stage
+    tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
 
     # now, tune the desired axes, bail out if a tune fails
     yield from bps.install_suspender(suspend_BeamInHutch)
@@ -864,11 +957,12 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         timeout=MASTER_TIMEOUT,
     )
 
-    yield from bps.mv(
-        scaler0.count, 1,
-        scaler1.count, 1,
-        timeout=MASTER_TIMEOUT,
-    )
+    # replaced by  9idcLAX:userTran1
+    # yield from bps.mv(
+    #     scaler0.count, 1,
+    #     scaler1.count, 1,
+    #     timeout=MASTER_TIMEOUT,
+    # )
 
     _md['plan_name'] = "SAXS"
     _md["hdf5_file"] = SAXS_file_name
@@ -883,8 +977,8 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     saxs_det.hdf1.stage_sigs = old_det_stage_sigs    # TODO: needed? not even useful?
 
     yield from bps.mv(
-        scaler0.count, 0,
-        scaler1.count, 0,
+        # scaler0.count, 0,
+        # scaler1.count, 0,
         terms.SAXS_WAXS.I0, scaler1.channels.chan02.s.get(),
         scaler0.display_rate, 5,
         scaler1.display_rate, 5,
@@ -1044,11 +1138,12 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         timeout=MASTER_TIMEOUT,
     )
 
-    yield from bps.mv(
-        scaler0.count, 1,
-        scaler1.count, 1,
-        timeout=MASTER_TIMEOUT,
-    )
+    # replaced by  9idcLAX:userTran1
+    # yield from bps.mv(
+    #     scaler0.count, 1,
+    #     scaler1.count, 1,
+    #     timeout=MASTER_TIMEOUT,
+    # )
 
     _md['plan_name'] = "WAXS"
     _md["hdf5_file"] = WAXS_file_name
@@ -1062,8 +1157,8 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     waxs_det.hdf1.stage_sigs = old_det_stage_sigs    # TODO: needed? not even useful?
 
     yield from bps.mv(
-        scaler0.count, 0,
-        scaler1.count, 0,
+        # scaler0.count, 0,
+        # scaler1.count, 0,
         # WAXS uses same PVs for normalization and transmission as SAXS, should we aliased it same to terms.WAXS???
         terms.SAXS_WAXS.I0, scaler1.channels.chan02.s.get(),
         terms.SAXS_WAXS.diode_transmission, scaler0.channels.chan04.s.get(),
