@@ -258,7 +258,7 @@ def instrument_default_tune_ranges():
         m_stage.r.tuner.width = 0.005
         a_stage.r.tuner.width = 0.0025
         m_stage.r2p.tuner.width = 9
-        a_stage.r2p.tuner.width = 5
+        a_stage.r2p.tuner.width = 8
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000035)
@@ -269,7 +269,7 @@ def instrument_default_tune_ranges():
         m_stage.r.tuner.width = 0.005
         a_stage.r.tuner.width = 0.0022
         m_stage.r2p.tuner.width = 8
-        a_stage.r2p.tuner.width = 5
+        a_stage.r2p.tuner.width = 7
         ms_stage.rp.tuner.width = 3
         as_stage.rp.tuner.width = 3
         minstep = user_override.pick("usaxs_minstep", 0.000025)
@@ -288,7 +288,7 @@ def instrument_default_tune_ranges():
         yield from bps.mv(terms.USAXS.usaxs_minstep, minstep)
 
     elif 20.8 <= monochromator.dcm.energy.position:   # Si 220 or 440 crystals
-        if 11 <= m_stage.r.user_readback.value :
+        if m_stage.r.user_readback.value >= 11 :
             #Si 440 crystals
             m_stage.r.tuner.width = 0.005
             a_stage.r.tuner.width = 0.0006
@@ -305,7 +305,7 @@ def instrument_default_tune_ranges():
             m_stage.r.tuner.width = 0.005
             a_stage.r.tuner.width = 0.0018
             m_stage.r2p.tuner.width = 8
-            a_stage.r2p.tuner.width = 5
+            a_stage.r2p.tuner.width = 12
             ms_stage.rp.tuner.width = 3
             as_stage.rp.tuner.width = 3
             minstep = user_override.pick("usaxs_minstep", 0.00002)

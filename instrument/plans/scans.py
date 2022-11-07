@@ -134,17 +134,17 @@ def preUSAXStune(md={}):
 
     tuners = OrderedDict()                 # list the axes to tune
     # 20IDB does not need tuning M stage too often. Leave to manual staff action
-    #tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
+    tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
     if not m_stage.isChannelCut:
         tuners[m_stage.r2p] = tune_m2rp        # make M stage crystals parallel
     if terms.USAXS.useMSstage.get():
         tuners[ms_stage.rp] = tune_msrp    # align MSR stage with M stage
     if terms.USAXS.useSBUSAXS.get():
         tuners[as_stage.rp] = tune_asrp    # align ASR stage with MSR stage and set ASRP0 value
-    tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+    #tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
     tuners[a_stage.r] = tune_ar            # tune A stage to M stage
     # moving this up improves overall stability at 20IDB
-    #tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+    tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
 
     # now, tune the desired axes, bail out if a tune fails
     yield from bps.install_suspender(suspend_BeamInHutch)
