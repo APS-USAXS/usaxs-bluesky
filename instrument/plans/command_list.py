@@ -117,9 +117,10 @@ def before_command_list(md=None, commands=None):
 
     yield from bps.mv(
         user_data.time_stamp, str(datetime.datetime.now()),
-        user_data.state, "Starting data collection",
         user_data.collection_in_progress, 1,
     )
+
+    yield from user_data.set_state_plan("Starting data collection")
 
     yield from bps.mv(
         ti_filter_shutter, "close",
@@ -206,10 +207,10 @@ def after_command_list(md=None):
     #     md = {}
     yield from bps.mv(
         user_data.time_stamp, str(datetime.datetime.now()),
-        user_data.state, "USAXS macro file done",  # exact text triggers the music
         user_data.collection_in_progress, 0,
         ti_filter_shutter, "close",
     )
+    yield from user_data.set_state_plan("USAXS macro file done")
 
 
 def before_plan(md=None):
@@ -438,7 +439,7 @@ def execute_command_list(filename, commands, md=None):
         contents from input file, such as:
         ``SAXS 0 0 0 blank``
     """
-    from .scans import preUSAXStune, SAXS, USAXSscan, WAXS
+    from .scans import preUSAXStune, SAXS, USAXSscan, WAXS, allUSAXStune
 
     if md is None:
         md = {}
@@ -488,6 +489,7 @@ def execute_command_list(filename, commands, md=None):
             pi_onf = PI_onF,
             pi_onr = PI_onR,
             preusaxstune = preUSAXStune,
+            allusaxstune = allUSAXStune,
         )
 
         def _handle_actions_():

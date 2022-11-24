@@ -115,7 +115,6 @@ def preUSAXStune(md={}):
         d_stage.y, terms.USAXS.diode.dy.get(),
 
         user_data.time_stamp, str(datetime.datetime.now()),
-        user_data.state, "pre-USAXS optics tune",
         # user_data.collection_in_progress, 1,
 
         # Is this covered by user_mode, "USAXS"?
@@ -127,6 +126,8 @@ def preUSAXStune(md={}):
         scaler0.preset_time,  0.1,
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("pre-USAXS optics tune")
+
     # when all that is complete, then ...
     yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
 
@@ -134,17 +135,17 @@ def preUSAXStune(md={}):
 
     tuners = OrderedDict()                 # list the axes to tune
     # 20IDB does not need tuning M stage too often. Leave to manual staff action
-    tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
+    #tuners[m_stage.r] = tune_mr            # tune M stage to monochromator
     if not m_stage.isChannelCut:
         tuners[m_stage.r2p] = tune_m2rp        # make M stage crystals parallel
     if terms.USAXS.useMSstage.get():
         tuners[ms_stage.rp] = tune_msrp    # align MSR stage with M stage
     if terms.USAXS.useSBUSAXS.get():
         tuners[as_stage.rp] = tune_asrp    # align ASR stage with MSR stage and set ASRP0 value
-    #tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+    tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
     tuners[a_stage.r] = tune_ar            # tune A stage to M stage
     # moving this up improves overall stability at 20IDB
-    tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
+    #tuners[a_stage.r2p] = tune_a2rp        # make A stage crystals parallel
 
     # now, tune the desired axes, bail out if a tune fails
     yield from bps.install_suspender(suspend_BeamInHutch)
@@ -164,6 +165,12 @@ def preUSAXStune(md={}):
         # We need to wait a short bit to allow EPICS database
         # to complete processing and report back to us.
         yield from bps.sleep(1)
+    # tune a2rp one more time as final step, we will see if it is needed...  
+    yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
+    yield from tune_a2rp(md=md)
+    if not axis.tuner.tune_ok:
+        logger.warning("!!! tune failed for axis %s !!!", "a2rp")
+    yield from bps.sleep(1)
     yield from bps.remove_suspender(suspend_BeamInHutch)
 
     logger.info("USAXS count time: %s second(s)", terms.USAXS.usaxs_time.get())
@@ -171,13 +178,12 @@ def preUSAXStune(md={}):
         scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
         user_data.time_stamp,       str(datetime.datetime.now()),
         # user_data.collection_in_progress, 0,
-        user_data.state,            "pre-USAXS optics tuning done",
-
         terms.preUSAXStune.num_scans_last_tune, 0,
         terms.preUSAXStune.run_tune_next,       0,
         terms.preUSAXStune.epoch_last_tune,     time.time(),
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("pre-USAXS optics tune")
 
 def allUSAXStune(md={}):
     """
@@ -208,9 +214,7 @@ def allUSAXStune(md={}):
         d_stage.y, terms.USAXS.diode.dy.get(),
 
         user_data.time_stamp, str(datetime.datetime.now()),
-        user_data.state, "pre-USAXS optics tune",
         # user_data.collection_in_progress, 1,
-
         # Is this covered by user_mode, "USAXS"?
         usaxs_slit.v_size,  terms.SAXS.usaxs_v_size.get(),
         usaxs_slit.h_size,  terms.SAXS.usaxs_h_size.get(),
@@ -220,6 +224,8 @@ def allUSAXStune(md={}):
         scaler0.preset_time,  0.1,
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("pre-USAXS optics tune")
+
     # when all that is complete, then ...
     yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
 
@@ -263,13 +269,12 @@ def allUSAXStune(md={}):
         scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
         user_data.time_stamp,       str(datetime.datetime.now()),
         # user_data.collection_in_progress, 0,
-        user_data.state,            "pre-USAXS optics tuning done",
-
         terms.preUSAXStune.num_scans_last_tune, 0,
         terms.preUSAXStune.run_tune_next,       0,
         terms.preUSAXStune.epoch_last_tune,     time.time(),
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("pre-USAXS optics tune")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -297,12 +302,13 @@ def preSWAXStune(md={}):
 
     # yield from bps.mv(
     #     user_data.time_stamp, str(datetime.datetime.now()),
-    #     user_data.state, "pre-SWAXS optics tune",
     #     # user_data.collection_in_progress, 1,
 
     #     scaler0.preset_time,  0.1,
     #     timeout=MASTER_TIMEOUT,
     # )
+    # yield from user_data.set_state_plan("pre-SWAXS optics tune")
+
     # # when all that is complete, then ...
     # yield from bps.mv(ti_filter_shutter, "open", timeout=MASTER_TIMEOUT)
 
@@ -335,7 +341,6 @@ def preSWAXStune(md={}):
     # yield from bps.mv(
     #     scaler0.preset_time,        terms.USAXS.usaxs_time.get(),
     #     user_data.time_stamp,       str(datetime.datetime.now()),
-    #     user_data.state,            "pre-SWAXS optics tuning done",
     #     # user_data.collection_in_progress, 0,
 
     #     terms.preUSAXStune.num_scans_last_tune, 0,
@@ -343,6 +348,7 @@ def preSWAXStune(md={}):
     #     terms.preUSAXStune.epoch_last_tune,     time.time(),
     #     timeout=MASTER_TIMEOUT,
     # )
+    # yield from user_data.set_state_plan("pre-SWAXS optics tune")
     yield from bps.null()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -404,7 +410,6 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
     ts = str(datetime.datetime.now())
     yield from bps.mv(
         user_data.sample_title, scan_title,
-        user_data.state, "starting USAXS step scan",
         user_data.sample_thickness, thickness,
         user_data.spec_scan, str(SCAN_N),
         # or terms.FlyScan.order_number.get()
@@ -413,6 +418,7 @@ def USAXSscanStep(pos_X, pos_Y, thickness, scan_title, md=None):
         # user_data.collection_in_progress, 1,
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("starting USAXS step scan")
 
     yield from bps.mv(
         user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
@@ -634,7 +640,6 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
     ts = str(datetime.datetime.now())
     yield from bps.mv(
         user_data.sample_title, scan_title,
-        user_data.state, "starting USAXS Flyscan",
         user_data.sample_thickness, thickness,
         user_data.spec_scan, str(SCAN_N),
         # or terms.FlyScan.order_number.get()
@@ -643,6 +648,8 @@ def Flyscan(pos_X, pos_Y, thickness, scan_title, md=None):
         # user_data.collection_in_progress, 1,
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("starting USAXS Flyscan")
+
     yield from bps.mv(
         user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
         timeout=MASTER_TIMEOUT,
@@ -900,13 +907,13 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     ts = str(datetime.datetime.now())
     yield from bps.mv(
         user_data.sample_title, scan_title,
-        user_data.state, "starting SAXS collection",
         user_data.sample_thickness, thickness,
         user_data.spec_scan, str(SCAN_N),
         user_data.time_stamp, ts,
         user_data.scan_macro, "SAXS",       # match the value in the scan logs
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("starting SAXS collection")
     yield from bps.mv(
         user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
         timeout=MASTER_TIMEOUT,
@@ -958,10 +965,10 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
             scaler0.delay, 0,
             terms.SAXS_WAXS.start_exposure_time, ts,
-            user_data.state, f"SAXS collection for {terms.SAXS.acquire_time.get()} s",
             user_data.spec_scan, str(SCAN_N),
             timeout=MASTER_TIMEOUT,
         )
+        yield from user_data.set_state_plan(f"SAXS collection for {terms.SAXS.acquire_time.get()} s")
 
         # replaced by  9idcLAX:userTran1
         # yield from bps.mv(
@@ -986,11 +993,11 @@ def SAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         scaler0.delay, old_delay,
 
         terms.SAXS.collecting, 0,
-        user_data.state, "Done SAXS",
         user_data.time_stamp, ts,
         # user_data.collection_in_progress, 0,
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("Done SAXS")
     logger.info(f"I0 value: {terms.SAXS_WAXS.I0.get()}")
     yield from after_plan()
 
@@ -1076,13 +1083,13 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
     ts = str(datetime.datetime.now())
     yield from bps.mv(
         user_data.sample_title, scan_title,
-        user_data.state, "starting WAXS collection",
         user_data.sample_thickness, thickness,
         user_data.spec_scan, str(SCAN_N),
         user_data.time_stamp, ts,
         user_data.scan_macro, "WAXS",       # match the value in the scan logs
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("starting WAXS collection")
     yield from bps.mv(
         user_data.spec_file, os.path.split(specwriter.spec_filename)[-1],
         timeout=MASTER_TIMEOUT,
@@ -1133,10 +1140,9 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
 
             scaler0.delay, 0,
             terms.SAXS_WAXS.start_exposure_time, ts,
-            user_data.state,
-                f"WAXS collection for {terms.WAXS.acquire_time.get()} s",
             timeout=MASTER_TIMEOUT,
         )
+        yield from user_data.set_state_plan(f"WAXS collection for {terms.WAXS.acquire_time.get()} s")
 
         # replaced by  9idcLAX:userTran1
         # yield from bps.mv(
@@ -1167,11 +1173,11 @@ def WAXS(pos_X, pos_Y, thickness, scan_title, md=None):
         scaler0.delay, old_delay,
 
         terms.WAXS.collecting, 0,
-        user_data.state, "Done WAXS",
         user_data.time_stamp, ts,
         #user_data.collection_in_progress, 0,
         timeout=MASTER_TIMEOUT,
     )
+    yield from user_data.set_state_plan("Done WAXS")
 
     logger.info(f"I0 value: {terms.SAXS_WAXS.I0.get()}")
     yield from after_plan()

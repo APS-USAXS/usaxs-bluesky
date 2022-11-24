@@ -53,11 +53,11 @@ def tune_GslitsCenter():
     ts = str(datetime.datetime.now())
     yield from bps.mv(
         user_data.sample_title, title,
-        user_data.state, "tune Guard slits center",
         user_data.spec_scan, str(RE.md["scan_id"]+1+1),     # TODO: Why SCAN_N+1?
         user_data.time_stamp, ts,
         user_data.scan_macro, "tune_GslitCenter",
         )
+    yield from user_data.set_state_plan("tune Guard slits center")
 
     yield from mode_USAXS()
     yield from bps.mv(
@@ -67,11 +67,9 @@ def tune_GslitsCenter():
     yield from bps.mv(ti_filter_shutter, "open")
     yield from insertTransmissionFilters()
     yield from bps.sleep(0.1)
-    yield from bps.mv(
-        user_data.state, "autoranging the PD",
-        )
+    yield from user_data.set_state_plan("autoranging the PD")
     yield from autoscale_amplifiers([upd_controls, I0_controls, I00_controls])
-    yield from bps.mv(user_data.state, title)
+    yield from user_data.set_state_plan(title)
 
     old_preset_time = scaler0.preset_time.get()
     yield from bps.mv(scaler0.preset_time, 0.2)
@@ -187,7 +185,7 @@ def _USAXS_tune_guardSlits():
         guard_slit.inb, original_position["inb"] - h_step_into,
         )
 
-    yield from bps.mv(user_data.state, "autoranging the PD")
+    yield from user_data.set_state_plan("autoranging the PD")
     yield from autoscale_amplifiers([upd_controls, I0_controls, I00_controls])
 
     def cleanup(msg):

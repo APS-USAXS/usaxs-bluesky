@@ -1,6 +1,6 @@
 """this is a PTC10 plan
     reload by
-    # %run -i ptc10_local
+    # %run -im ptc10_plan
 """
 
 import logging

@@ -53,8 +53,8 @@ def IfRequestedStopBeforeNextScan():
             terms.StopBeforeNextScan,           0,
             user_data.collection_in_progress,   0,
             user_data.time_stamp, str(datetime.datetime.now()),
-            user_data.state, "Aborted data collection",
-       )
+        )
+        yield from user_data.set_state_plan("Aborted data collection")
 
         # RE.pause_msg = "DEBUG: stopped the scans, ignore the (informative) exception trace"
         raise RequestAbort(msg)        # long exception trace?
