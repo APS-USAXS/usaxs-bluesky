@@ -5,7 +5,7 @@ BS plan to control Linkam temperature during data collection same as spec used t
 ///    %run -i heater_profile.py
 load this way:
 
-    %run -i linkam.py
+    %run -im user.linkam
 
 * file: /USAXS_data/bluesky_plans/linkam.py
 * aka:  ~/.ipython/user/linkam.py
@@ -43,15 +43,15 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
 
     0. use linkam_tc1
     1. collect 40C (~RT) USAXS/SAXS/WAXS
-    2. change temperature T to temp1 with rate1, collect USAXS/SAXS/WAXS while heating
-    3. when temp1 reached, hold for delay 1min minutes, collecting data repeatedly
-    4. change T to temp2 with rate2, collect USAXS/SAXS/WAXS while heating/cooling
+    2. change temperature T to temp1 with rate1, does NOT collect USAXS/SAXS/WAXS while heating
+    3. when temp1 reached, hold for delay delay1min minutes, collecting data repeatedly
+    4. changes T to temp2 with rate2, does NOT collect USAXS/SAXS/WAXS while heating/cooling
     5. when temp2 reached, collect final data
     and it will end here...
     Temp is in C, delay is in minutes
 
     reload by
-    # %run -im linkam
+    # %run -im user.linkam
     """
 
     def setSampleName():
@@ -79,7 +79,7 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
 
     linkam = linkam_tc1     #New Linkam from windows ioc (all except NIST 1500).
     #linkam = linkam_ci94   #this is old TS1500 NIST from LAX
-    logger.info(f"Linkam controller PV prefix={linkam.prefix}")
+    #logger.info(f"Linkam controller PV prefix={linkam.prefix}")
     isDebugMode = linkam_debug.get()
 
     # TODO: what about HeaterStopAndHoldRequested?
@@ -94,13 +94,15 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     yield from collectAllThree(isDebugMode)
 
     #Heating cycle 1 - ramp up and hold
-    yield from change_ramp_rate(rate1)                      # next ramp at rate1 (deg C/min)
-    yield from linkam_change_setpoint(temp1, wait=False)    # start ramp to temp1 (C)
     logger.info(f"Ramping temperature to {temp1} C")        # for the log file
+    yield from change_ramp_rate(rate1)                      # next ramp at rate1 (deg C/min)
+    yield from linkam_change_setpoint(temp1, wait=True)     # start ramp to temp1 (C)
 
-    while not linkam.temperature.inposition:                # data collection until we reach temp1.
-        # checks only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
-        yield from collectAllThree(isDebugMode)             # USAXS, SAXS, WAXS
+    t0 = time.time()                                    # mark start time of data collection.
+
+    #while not linkam.temperature.inposition:                # data collection until we reach temp1.
+    #    # checks only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
+    #    yield from collectAllThree(isDebugMode)             # USAXS, SAXS, WAXS
 
     checkpoint = time.time() + delay1min*MINUTE             # time to end ``delay1min`` hold period
 
@@ -113,10 +115,10 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     logger.info(f"Waited for {delay1min} minutes, now changing temperature to {temp2} C")
 
     yield from change_ramp_rate(rate2)                      # next ramp at rate2 (deg C/min)
-    yield from linkam_change_setpoint(temp2, wait=False)    # start ramp to temp2 (C). Typically cooling period
+    yield from linkam_change_setpoint(temp2, wait=True)    # start ramp to temp2 (C). Typically cooling period
 
-    while not linkam.temperature.inposition:                # data collection until we reach temp2.
-        yield from collectAllThree(isDebugMode)
+    #while not linkam.temperature.inposition:                # data collection until we reach temp2.
+    #    yield from collectAllThree(isDebugMode)
 
     logger.info(f"reached {temp2} C")                   # record we reached tmep2
 
@@ -146,7 +148,7 @@ def fanLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, 
     Temp is in C, delay is in minutes
 
     reload by
-    # %run -im linkam
+    # %run -im user.linkam
     """
 
     def setSampleName():
@@ -192,6 +194,7 @@ def fanLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, 
     #Heating cycle 1 - ramp up and hold
     yield from change_rate_and_temperature(rate1, temp1, wait=True)
     logger.info("Ramped temperature to %s C", temp1)        # for the log file
+    t0 = time.time()                                    # mark start time of data collection at temperature 1.
 
     checkpoint = time.time() + delay1min*MINUTE             # time to end ``delay1min`` hold period
 
@@ -200,17 +203,21 @@ def fanLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, 
     while time.time() < checkpoint:                         # collects USAXS/SAXS/WAXS data while holding at temp1
         yield from collectAllThree(isDebugMode)
 
-    #Cooling cycle - cool down
-    logger.info("Waited for %s minutes, now changing temperature to 40 C", delay1min)
-
-    yield from change_rate_and_temperature(150, 40, wait=True)
+    ##Cooling cycle - cool down
+    #logger.info("Waited for %s minutes, now changing temperature to 40 C", delay1min)
+    #yield from change_rate_and_temperature(150, 40, wait=True)
     
-    logger.info("reached 40 C")                              # record we reached tmep2
-    yield from collectAllThree(isDebugMode)
+    #logger.info("reached 40 C")                              # record we reached tmep2
+    #yield from collectAllThree(isDebugMode)
 
     #cycle 2
+    logger.info("Changing temperature to %s C", temp2)
+
     yield from change_rate_and_temperature(rate2, temp2, wait=True)
+    
     logger.info("Ramped temperature to %s C", temp2)        # for the log file
+    
+    t0 = time.time()                                    # mark start time of data collection at temperature 2
 
     checkpoint = time.time() + delay2min*MINUTE             # time to end ``delay2min`` hold period
 

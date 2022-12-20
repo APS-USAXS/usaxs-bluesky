@@ -21,12 +21,12 @@ logger.info(__file__)
 from apstools.utils import EmailNotifications
 
 # user will write code to check the corresponding symbol to send EmailNotifications
-NOTIFY_ON_RESET = True
+NOTIFY_ON_RESET = False
 NOTIFY_ON_SCAN_DONE = False
-NOTIFY_ON_BEAM_LOSS = True
-NOTIFY_ON_BAD_FLY_SCAN = True
-NOTIFY_ON_FEEDBACK = True
-NOTIFY_ON_BADTUNE = True
+NOTIFY_ON_BEAM_LOSS = False
+NOTIFY_ON_BAD_FLY_SCAN = False
+NOTIFY_ON_FEEDBACK = False
+NOTIFY_ON_BADTUNE = False
 
 email_notices = EmailNotifications("usaxs@aps.anl.gov")
 email_notices.add_addresses(
