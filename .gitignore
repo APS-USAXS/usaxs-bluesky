@@ -42,3 +42,5 @@ core
 
 # local developer code
 dev_*.py
+user/_camonitor.log
+
