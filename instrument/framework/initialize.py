@@ -125,16 +125,10 @@ bec.disable_baseline()
 # RE.msg_hook = ts_msg_hook
 
 # set default timeout for all EpicsSignal connections & communications
-try:
-    EpicsSignalBase.set_defaults(
-        auto_monitor=True,
-        timeout=60,
-        write_timeout=60,
-        connection_timeout=5,
-    )
-except Exception as exc:
-    warnings.warn(
-        "ophyd version is old, upgrade to 1.5.4+ "
-        "to get set_defaults() method"
-    )
-    EpicsSignalBase.set_default_timeout(timeout=10, connection_timeout=5)
+TIMEOUT = 15
+EpicsSignalBase.set_defaults(
+    auto_monitor=True,
+    timeout=TIMEOUT,
+    write_timeout=TIMEOUT,
+    connection_timeout=TIMEOUT,
+)
