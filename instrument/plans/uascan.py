@@ -124,10 +124,29 @@ def uascan(
         trd_controls.auto.reqrange,
     ]
 
-    trd.kind = "omitted"
-    I00.kind = "omitted"
-    I000.kind = "omitted"
-    for obj in (m_stage.r, a_stage.r, a_stage.x, s_stage.y, d_stage.x):
+    # do not report the "quiet" detectors/stages during a uascan
+    quiet_detectors = [
+        # I0,
+        I00,
+        I000,
+        # upd2,
+        trd,
+    ]
+    quiet_stages = [
+        m_stage.r,
+        m_stage.x,
+        m_stage.y,
+        # a_stage.r,
+        # a_stage.x,
+        a_stage.y,
+        s_stage.x,
+        s_stage.y,
+        # d_stage.x,
+        d_stage.y,
+    ]
+    for obj in quiet_detectors:
+        obj.kind = "omitted"
+    for obj in quiet_stages:
         obj.kind = "omitted"
         obj.user_setpoint.kind = "omitted"
         obj.user_readback.kind = "omitted"
@@ -263,13 +282,13 @@ def uascan(
             # motor_resets += [as_stage.rp, prescan_positions["asrp"]]
         yield from bps.mv(*motor_resets)  # all at once
 
-        trd.kind = "hinted" # TODO: correct value?
-        I00.kind = "hinted" # TODO: correct value?
-        I000.kind = "hinted" # TODO: correct value?
-        for obj in (m_stage.r, a_stage.r, a_stage.y, s_stage.y, d_stage.y):
-            obj.kind = "normal" # TODO: correct value?
-            obj.user_setpoint.kind = "normal" # TODO: correct value?
-            obj.user_readback.kind = "hinted" # TODO: correct value?
+
+        for obj in quiet_detectors:
+            obj.kind = "hinted"  # TODO: correct value?
+        for obj in quiet_stages:
+            obj.kind = 3  # config|normal
+            obj.user_setpoint.kind = "normal"
+            obj.user_readback.kind = "hinted"
 
     # run the scan
     yield from _scan_()
