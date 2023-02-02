@@ -9,8 +9,14 @@ logger.info(__file__)
 
 from . import mpl
 
-logger.info("bluesky framework")
+# conda environment name
+import os
+_conda_prefix = os.environ.get("CONDA_PREFIX")
+if _conda_prefix is not None:
+    logger.info("CONDA_PREFIX = %s", _conda_prefix)
+del _conda_prefix
 
+logger.info("bluesky framework")
 from .framework import *
 from .devices import *
 from .callbacks import *
