@@ -15,7 +15,8 @@ logger.info(__file__)
 from apstools.devices import SCALER_AUTOCOUNT_MODE
 from bluesky import plan_stubs as bps
 
-from ..devices import a_stage, as_stage, d_stage
+from ..devices import a_stage, as_stage, d_stage, m_stage, s_stage
+from ..devices import I0, I00, I000, upd2, trd
 from ..devices import AutorangeSettings
 from ..devices import email_notices, NOTIFY_ON_RESET
 from ..devices import I0_controls, I00_controls, trd_controls, upd_controls
@@ -51,7 +52,14 @@ def reset_USAXS():
             as_stage.rp, terms.USAXS.ASRP0.get(),
             ]
     yield from bps.mv(*move_list)  # move all motors at once
-    # TITLE = SPEC_STD_TITLE
+    # fix omitted stuff from uascan see #584, #583
+    trd.kind = "hinted" # TODO: correct value?
+    I00.kind = "hinted" # TODO: correct value?
+    I000.kind = "hinted" # TODO: correct value?
+    for obj in (m_stage.r, a_stage.r, a_stage.y, s_stage.y, d_stage.y):
+        obj.kind = "normal" # TODO: correct value?
+        obj.user_setpoint.kind = "normal" # TODO: correct value?
+        obj.user_readback.kind = "hinted" # TODO: correct value?
 
     yield from user_data.set_state_plan("USAXS reset complete")
     if NOTIFY_ON_RESET:
