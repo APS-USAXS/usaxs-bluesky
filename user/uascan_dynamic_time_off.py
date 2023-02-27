@@ -3,7 +3,7 @@
 Turn off dynamic time in uascan.
 
 Command line::
-    %run -i user/uascan_dynamic_time_off.py
+    %run -im user.uascan_dynamic_time_off
 
 In a command file::
     run_python user/uascan_dynamic_time_off.py

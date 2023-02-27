@@ -3,7 +3,7 @@
 Turn on dynamic time in uascan.
 
 Command line::
-    %run -i user/uascan_dynamic_time_on.py
+    %run -im user.uascan_dynamic_time_on
 
 In a command file::
     run_python user/uascan_dynamic_time_on.py    
