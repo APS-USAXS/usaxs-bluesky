@@ -20,6 +20,7 @@ logger.info(__file__)
 from apstools.callbacks import NXWriterAPS
 import numpy as np
 import os
+import datetime
 
 from ..devices import terms
 from ..devices.user_data import user_data
@@ -235,6 +236,20 @@ class NXWriterUascan(OurCustomNXWriterBase):
 
     # convention: methods written in alphabetical order
 
+    def save_reduced_as_nxdata(self, addr, data):
+        """Save the reduced ``data`` to NXdata group ``key``."""
+        nxdata = self.root.create_group(addr)
+        nxdata.attrs["NX_class"] = "NXdata"
+        nxdata.attrs["Q_indices"] = 0
+        nxdata.attrs["axes"] = "Q"
+        nxdata.attrs["signal"] = "R"
+        nxdata.attrs["timestamp"] = str(datetime.datetime.now())
+        
+        for k, v in data.items():
+            nxdata.create_dataset(k, data=v)
+        nxdata["Q"].attrs["units"] = "1/A"
+        nxdata["R"].attrs["units"] = "none"
+
     def write_entry(self):
         "Write reduced SAXS data from here."
         super().write_entry()  # write the raw data
@@ -245,6 +260,16 @@ class NXWriterUascan(OurCustomNXWriterBase):
         logger.info("DIAGNOSTIC: Is HDF5 file open? %s", self.root.id.valid == 1)
         if self.root.id.valid == 1:
             logger.info("DIAGNOSTIC: HDF5 file access mode=%s", self.root.mode)
+    
+        try:
+            from .calculate_reduced_data import reduce_uascan
+
+            data = reduce_uascan(self.root)
+            h5_address = "/entry/uascan_reduced_full"
+            logger.info("TODO: save reduced uascan data to group: %s", h5_address)
+            self.save_reduced_as_nxdata(h5_address, data)
+        except Exception as exinfo:
+            logger.warning("Did not write reduced uascan data: %s", exinfo)
 
     def write_slits(self, parent):
         """
