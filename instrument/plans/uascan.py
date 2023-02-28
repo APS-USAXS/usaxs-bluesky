@@ -254,6 +254,18 @@ def uascan(
                     count_time = 2*count_time_base
 
     def _after_scan_():
+        from ..callbacks import nxwriter
+
+        if nxwriter.id.valid == 1:
+            logger.info(
+                "DIAGNOSTIC: nxwriter file ('%s') is OPEN with MODE='%s'.",
+                nxwriter.filename, nxwriter.mode,
+            )
+        else:
+            logger.info(
+                "DIAGNOSTIC: nxwriter file ('%s') is CLOSED.", nxwriter.filename,
+            )
+
         yield from bps.mv(
             # indicate USAXS scan is not running
             terms.USAXS.scanning, 0,
@@ -290,6 +302,9 @@ def uascan(
             obj.user_setpoint.kind = "normal"
             obj.user_readback.kind = "hinted"
 
+        # TODO: #588 reduce 1-D data in NX file
+
     # run the scan
+    # TODO: implement try..except..else..finally stanza for error handling
     yield from _scan_()
     yield from _after_scan_()
