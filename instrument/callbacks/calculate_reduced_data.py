@@ -188,13 +188,20 @@ def reduce_uascan(root):
     bkg = []
     for ch in range(5):
         addr = "upd_autorange_controls_ranges_gain%d_background" % ch
-        bkg.append(baseline[addr+"/value_start"][()])
+        bkg.append(baseline[addr + "/value_start"][()])
     pd_dark = [bkg[i] for i in pd_range]
 
     # compute the R(Q) profile
     usaxs = calc_R_Q(
-        wavelength, ar, seconds, pd, pd_dark, pd_gain, I0,
-        I0_gain=I0_amplifier_gain, ar_center=ar_center
+        wavelength,
+        ar,
+        seconds,
+        pd,
+        pd_dark,
+        pd_gain,
+        I0,
+        I0_gain=I0_amplifier_gain,
+        ar_center=ar_center,
     )
 
     return usaxs

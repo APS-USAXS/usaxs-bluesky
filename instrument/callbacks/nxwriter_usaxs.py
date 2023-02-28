@@ -1,4 +1,3 @@
-
 """
 define a custom NeXus file writer base for uascan raw data files
 
@@ -10,17 +9,18 @@ __all__ = [
     # "NXWriterFlyScan",    # not yet tested
     "NXWriterUascan",
     # "NXWriterSaxsWaxs",    # not yet tested
-    ]
+]
 
 import logging
 
 logger = logging.getLogger(__name__)
 logger.info(__file__)
 
-from apstools.callbacks import NXWriterAPS
-import numpy as np
-import os
 import datetime
+import os
+
+import numpy as np
+from apstools.callbacks import NXWriterAPS
 
 from ..devices import terms
 from ..devices.user_data import user_data
@@ -61,14 +61,15 @@ class OurCustomNXWriterBase(NXWriterAPS):
                 # links to metadata and baseline start values
     """
 
-    instrument_name = 'APS 9-ID-C USAXS'
+    instrument_name = "APS 9-ID-C USAXS"
     supported_plans = ("name", "the", "supported", "plans")
-    file_extension = "h5"       # no dot
+    file_extension = "h5"  # no dot
     config_version = "1.0"
 
     def write_entry(self):
         import apstools
-        nxentry = super().write_entry()     # default technique
+
+        nxentry = super().write_entry()  # default technique
         logger.debug("write_entry of file: %s", self.root.attrs["file_name"])
 
         nxentry["program_name"].attrs["config_version"] = self.config_version
@@ -78,23 +79,19 @@ class OurCustomNXWriterBase(NXWriterAPS):
         self.root.attrs["creator_version"] = apstools.__version__
 
     def write_monochromator(  # override NXWriterAPS
-            self,
-            parent,
-            pre="monochromator_dcm",
-            keys="wavelength energy theta".split()  # <- removed: y_offset mode
-            ):
+        self,
+        parent,
+        pre="monochromator_dcm",
+        keys="wavelength energy theta".split(),  # <- removed: y_offset mode
+    ):
         """
         group: /entry/instrument/monochromator:NXmonochromator
         """
 
         try:
-            links = {
-                key: self.get_stream_link(f"{pre}_{key}") for key in keys
-            }
+            links = {key: self.get_stream_link(f"{pre}_{key}") for key in keys}
         except KeyError as exc:
-            logger.warning(
-                "%s -- not creating monochromator group", str(exc)
-            )
+            logger.warning("%s -- not creating monochromator group", str(exc))
             return
 
         pre = "monochromator"
@@ -104,9 +101,7 @@ class OurCustomNXWriterBase(NXWriterAPS):
         except KeyError as exc:
             logger.warning("%s -- feedback signal not found", str(exc))
 
-        nxmonochromator = self.create_NX_group(
-            parent, "monochromator:NXmonochromator"
-        )
+        nxmonochromator = self.create_NX_group(parent, "monochromator:NXmonochromator")
         for k, v in links.items():
             nxmonochromator[k] = v
         return nxmonochromator
@@ -144,7 +139,9 @@ class OurCustomNXWriterBase(NXWriterAPS):
 
     def write_stream_internal(self, parent, d, subgroup, stream_name, k, v):
         subgroup.attrs["signal"] = "value"
-        subgroup.attrs["axes"] = ["time",]
+        subgroup.attrs["axes"] = [
+            "time",
+        ]
         if isinstance(d, list) and len(d) > 0:
             if v["dtype"] in ("string",):
                 d = self.h5string(d)
@@ -184,15 +181,15 @@ class OurCustomNXWriterBase(NXWriterAPS):
 
 class NXWriterFlyScan(OurCustomNXWriterBase):
 
-    supported_plans = ("Flyscan", )
+    supported_plans = ("Flyscan",)
 
     def write_streams(self, parent):
         "write all bluesky document streams in this run"
         bluesky = super().write_streams(parent)
 
-        if 'primary' not in bluesky and 'mca' in bluesky:
+        if "primary" not in bluesky and "mca" in bluesky:
             # link the two
-            bluesky['primary'] = bluesky['mca']
+            bluesky["primary"] = bluesky["mca"]
 
         return bluesky
 
@@ -202,7 +199,10 @@ class NXWriterSaxsWaxs(OurCustomNXWriterBase):
     writes NeXus data file from USAXS instrument SAXS & WAXS area detector scans
     """
 
-    supported_plans = ("SAXS", "WAXS",)
+    supported_plans = (
+        "SAXS",
+        "WAXS",
+    )
 
     def getResourceFile(self, resource_id):
         """
@@ -217,7 +217,7 @@ class NXWriterSaxsWaxs(OurCustomNXWriterBase):
         key = "/mnt/usaxscontrol/USAXS_data/"
         revision = "/share1/USAXS_data/"
         if fname.startswith(key):
-            fname = revision + fname[len(key):]
+            fname = revision + fname[len(key) :]
         # logger.debug("after: %s", fname)
         return fname
 
@@ -226,13 +226,16 @@ class NXWriterUascan(OurCustomNXWriterBase):
     """
     write raw uascan data to a NeXus/HDF5 file, no specific application definition
     """
+
     # TODO: identify what additional data is needed to collect
     # add RE.md["detectors"] = list : first item is for NXdata @signal attribute
     # add RE.md["positioners"] = list : entire list is for NXdata @axes attribute
 
     nxdata_signal = "PD_USAXS"
-    nxdata_signal_axes = ["a_stage_r",]
-    supported_plans = ("uascan", )
+    nxdata_signal_axes = [
+        "a_stage_r",
+    ]
+    supported_plans = ("uascan",)
 
     # convention: methods written in alphabetical order
 
@@ -244,7 +247,7 @@ class NXWriterUascan(OurCustomNXWriterBase):
         nxdata.attrs["axes"] = "Q"
         nxdata.attrs["signal"] = "R"
         nxdata.attrs["timestamp"] = str(datetime.datetime.now())
-        
+
         for k, v in data.items():
             nxdata.create_dataset(k, data=v)
         nxdata["Q"].attrs["units"] = "1/A"
@@ -260,7 +263,7 @@ class NXWriterUascan(OurCustomNXWriterBase):
         logger.info("DIAGNOSTIC: Is HDF5 file open? %s", self.root.id.valid == 1)
         if self.root.id.valid == 1:
             logger.info("DIAGNOSTIC: HDF5 file access mode=%s", self.root.mode)
-    
+
         try:
             from .calculate_reduced_data import reduce_uascan
 
