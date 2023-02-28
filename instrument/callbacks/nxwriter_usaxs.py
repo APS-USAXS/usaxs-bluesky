@@ -235,6 +235,11 @@ class NXWriterUascan(OurCustomNXWriterBase):
 
     # convention: methods written in alphabetical order
 
+    def write_entry(self):
+        "Write reduced SAXS data from here."
+        super().write_entry()
+        logger.info("DIAGNOSTIC: this is when to write reduced 1-D data")
+
     def write_slits(self, parent):
         """
         group: /entry/instrument/slits:NXnote/SLIT:NXslit
