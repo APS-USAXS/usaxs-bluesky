@@ -53,8 +53,8 @@ log_file_name = pathlib.Path(user_dir.get()) / (
 linkam_ci94.ramp = linkam_ci94.rate
 linkam_tc1.ramp = linkam_tc1.ramprate
 
-linkam = linkam_tc1     # choose which one
-# linkam = linkam_ci94     # choose which one
+linkam = linkam_tc1     # choose which one#
+#linkam = linkam_ci94     # choose which one
 
 # set tolerance for "in position" (Python term, not an EPICS PV)
 # note: done = |readback - setpoint| <= tolerance

@@ -50,12 +50,12 @@ def myFiniteLoop(pos_X, pos_Y, thickness, scan_title, delay1minutes, md={}):
         )
 
     def collectAllThree(debug=False):
-        sampleMod = setSampleName()
         if debug:
             #for testing purposes, set debug=True
             print(sampleMod)
             yield from bps.sleep(20)
         else:
+            sampleMod = setSampleName()
             md["title"]=sampleMod
             yield from USAXSscan(pos_X, pos_Y, thickness, sampleMod, md={})
             sampleMod = setSampleName()

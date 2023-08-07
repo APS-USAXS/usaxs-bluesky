@@ -88,7 +88,7 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
         yield from before_command_list()                #this will run usual startup scripts for scans
 
     # Collect data at 40C as Room temperature data.
-    yield from change_ramp_rate(200)                    # for next ramp
+    yield from change_ramp_rate(150)                    # for next ramp
     yield from linkam_change_setpoint(40, wait=True)    # sets the temp of to 40C, waits until we get there (no data collection)
     t0 = time.time()                                    # mark start time of data collection.
     yield from collectAllThree(isDebugMode)
@@ -101,8 +101,8 @@ def myLinkamPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, t
     t0 = time.time()                                    # mark start time of data collection.
 
     #while not linkam.temperature.inposition:                # data collection until we reach temp1.
-    #    # checks only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
-    #    yield from collectAllThree(isDebugMode)             # USAXS, SAXS, WAXS
+        # checks only once per USAXS/SAXS?WAXS cycle, basically once each 3-4 minutes
+        #yield from collectAllThree(isDebugMode)             # USAXS, SAXS, WAXS
 
     checkpoint = time.time() + delay1min*MINUTE             # time to end ``delay1min`` hold period
 
@@ -506,3 +506,4 @@ def FanCryoPlan(pos_X, pos_Y, thickness, scan_title, temp1, rate1, delay1min, te
 
     if isDebugMode is not True:
        yield from after_command_list()                  # runs standard after scan scripts.
+
